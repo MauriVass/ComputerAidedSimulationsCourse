@@ -17,7 +17,7 @@ runs = int(sys.argv[2])
 
 data = pd.read_csv(f'binsballs{d}_runs{runs}.dat',sep='\t')
 
-Ns = list(data['n'])
+Ns = np.array(data['n'])
 n = max(Ns)
 x = np.arange(min(Ns),n)
 if(d==1):
@@ -29,7 +29,7 @@ else:
     y_lb = func(x,d)
 
 
-means = list(data['ave'])
+means = np.array(data['ave'])
 lb = np.array(data['ciLow'])
 ub = np.array(data['ciHigh'])
 CIs = ub-lb
@@ -49,11 +49,13 @@ plt.fill_between(Ns, lb, ub, color='green', alpha=0.2, label=f'95% Confidence In
 title = 'Random Dropping Policy' if d==1 else f'Random Load Balancing d = {d}'
 plt.title(f'{title}, Runs= {runs}')
 
-plt.legend(loc='lower right')
+plt.legend(loc='upper left')
 plt.xscale("log")
 plt.xlabel('Bins/Balls')
 plt.ylabel('Max Bin Occupacy')
+if(d>1):
+	plt.ylim(0.8, 5.2)
 
-save_title = (f'../Report/Images/Lab1/{title}Runs= {runs}').replace('=','').replace(' ','')
+save_title = (f'Images/{title}Runs= {runs}').replace('=','').replace(' ','') #../Report/Images/Lab1/
 plt.savefig(save_title)
 plt.show()

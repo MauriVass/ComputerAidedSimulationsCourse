@@ -2,13 +2,13 @@ import numpy as np
 import random
 from scipy.stats import t
 import sys
+import time
 
 # initial settings
 initial_seed = 2502
 confidence_level = 0.95
-n_bins = int(sys.argv[1]) #can be 1,2,4
+n_bins = int(sys.argv[1]) #Number of bins to be selected at each iteration. This can be 1,2,4
 runs = int(sys.argv[2]) # number of runs
-debug=False
 
 # create list of inputs
 input_list=[]
@@ -35,9 +35,20 @@ def evaluate_conf_interval(x):
     stddev = x.std(ddof=1) # std dev
     ci = t_sh * stddev / np.sqrt(runs) # confidence interval half width
     rel_err = ci / ave # relative error
-    if debug:
-        print("Min", x.min(), "Ave", ave, "Max", x.max())
     return ave, ci, rel_err
+
+def findLeastOccupied(bins,rnd_bins):
+    #Index of the bin where to put the ball
+    index = -1
+    #Check the least occupied bin and increase its occupancy. (if n_bins = [2,4])
+    #Just return the index. (if n_bins=1)
+    min_val = 999
+    for i in rnd_bins:
+        if(min_val > bins[i]):
+            min_val = bins[i]
+            index = i 
+    #print(rnd_bins[0],bins[rnd_bins[0]],rnd_bins[1],bins[rnd_bins[1]],index)
+    return index
 
 def run_simulator(n): # run the bins-and-ball model for n bins and for multiple runs
     random.seed(a=initial_seed) # reset initial seed
@@ -45,14 +56,9 @@ def run_simulator(n): # run the bins-and-ball model for n bins and for multiple 
     for r in range(runs): # for each run
         bins = np.full(n, 0) # bins[i] is the occupancy of bin i; start from empty bins
         for i in range(n): # for each ball
-            rnd_bins = random.sample(range(0, n), n_bins)
-            ind = -1
-            min_val = 999
-            for i in rnd_bins:
-                if(min_val > bins[i]):
-                    min_val = bins[i]
-                    ind = i
-            bins[ind] = bins[ind] + 1 # drop ball randomly and update bins
+            rnd_bins = random.sample(range(0, n), n_bins) #select n_bins different bins [1,2,4]
+            ind = findLeastOccupied(bins,rnd_bins)            
+            bins[ind] = bins[ind] + 1 # Update bins occupancy
         maxvec[r] = bins.max() # compute the max occupancy
     ave, ci, rel_err = evaluate_conf_interval(maxvec) # evaluate the confidence intervals
     lower_bound = np.log(n) / np.log(np.log(n)) # theoretical formula
@@ -63,8 +69,6 @@ def run_simulator(n): # run the bins-and-ball model for n bins and for multiple 
 #########################
 # open the outfile file and write the header
 
-#for i in [3,5,10,20]:
- #   runs = i
 datafile = open(f"binsballs{n_bins}_runs{runs}.dat", "w")
 print("n\tLowerbound\t3*Lowerbound\tciLow\tave\tciHigh\tRelErr",file=datafile)
 for n in input_list: # for each number of bins and balls
@@ -72,3 +76,6 @@ for n in input_list: # for each number of bins and balls
     out_run=run_simulator(n) # get the output results of a run
     print(*out_run,sep="\t",file=datafile) # write on a file
 datafile.close() # close the file
+
+import os
+os.system(f"python PlotResults.py {n_bins} {runs}")

@@ -16,7 +16,7 @@ for i in files_index:
 	data = pd.read_csv(f'binsballs{d}_runs{i}.dat',sep='\t')
 
 
-	Ns = list(data['n'])
+	Ns = np.array(data['n'])
 	n = max(Ns)
 
 	rel_err = np.array(data['RelErr'])
