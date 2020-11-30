@@ -26,15 +26,14 @@ for i,d in enumerate([1,2,4]):
 	plt.plot(Ns,means,c=colors[i], marker="o", label=lab)
 	plt.fill_between(Ns, lb, ub, color=colors[i], alpha=0.2)
 
-title = 'Comparison among Policies{d}'
-plt.title(f'{title}, Runs= {runs}')
+title = f'Comparison among Policies, Runs= {runs}'
+plt.title(title)
 
 plt.plot([], [], ' ', label="95% Confidence Interval")
 plt.legend(loc='upper left')
 plt.xscale("log")
 plt.xlabel('Bins/Balls')
 plt.ylabel('Max Bin Occupacy')
-
 
 save_title = (f'Images/{title}').replace(' ','')
 plt.savefig(save_title)

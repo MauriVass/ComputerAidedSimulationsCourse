@@ -56,6 +56,9 @@ plt.ylabel('Max Bin Occupacy')
 if(d>1):
 	plt.ylim(0.8, 5.2)
 
-save_title = (f'Images/{title}Runs= {runs}').replace('=','').replace(' ','') #../Report/Images/Lab1/
+remove_chars = [' ','=']
+for r in remove_chars:
+	title = title.replace(r,'')
+save_title = (f'Images/{title}Runs= {runs}')
 plt.savefig(save_title)
 plt.show()

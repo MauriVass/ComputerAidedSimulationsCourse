@@ -2,13 +2,14 @@ import numpy as np
 import random
 from scipy.stats import t
 import sys
-import time
 
 # initial settings
 initial_seed = 2502
 confidence_level = 0.95
+if(len(sys.argv!=2):
+    print('Wrong input data: Number of bins [1,2,4], Number of runs')
 n_bins = int(sys.argv[1]) #Number of bins to be selected at each iteration. This can be 1,2,4
-runs = int(sys.argv[2]) # number of runs
+runs = int(sys.argv[2]) #Number of runs
 
 # create list of inputs
 input_list=[]
@@ -47,7 +48,6 @@ def findLeastOccupied(bins,rnd_bins):
         if(min_val > bins[i]):
             min_val = bins[i]
             index = i 
-    #print(rnd_bins[0],bins[rnd_bins[0]],rnd_bins[1],bins[rnd_bins[1]],index)
     return index
 
 def run_simulator(n): # run the bins-and-ball model for n bins and for multiple runs
@@ -77,5 +77,6 @@ for n in input_list: # for each number of bins and balls
     print(*out_run,sep="\t",file=datafile) # write on a file
 datafile.close() # close the file
 
-import os
-os.system(f"python PlotResults.py {n_bins} {runs}")
+
+#import os
+#os.system(f"python PlotResults.py {n_bins} {runs}")
