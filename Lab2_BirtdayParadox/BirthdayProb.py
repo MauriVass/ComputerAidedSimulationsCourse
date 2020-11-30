@@ -7,7 +7,7 @@ import math
 # initial settings
 initial_seed = 2500
 confidence_level = 0.95
-runs = 750 # number of runs
+runs = 180 # number of runs
 #True -> find probability of conflict
 #False -> find minimum number of people needed to experience a collision
 isProb = False
@@ -19,15 +19,15 @@ number_days = possible_days[index_day]
 
 if(isProb):
 	#Calculate lower and upper bounds using the theoretical formula
-	lower_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.05))) )#The lower bound is calculated with probability 0.1
-	upper_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.95))) )#The upper bound is calculated with probability 0.9
+	people_lower_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.05))) )#The lower bound is calculated with probability 0.1
+	people_upper_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.95))) )#The upper bound is calculated with probability 0.9
 	#Use a number of points increasing with the number of days
-	step = int((upper_bound - lower_bound) / 25 + 5*index_day)
-	number_persons = range(lower_bound,upper_bound,step)
+	step = int((people_upper_bound - people_lower_bound) / 20 + 5*index_day)
+	number_persons = range(people_lower_bound,people_upper_bound,step)
 
+'''
 #Use a fixed step
 #Set different starting values and steps depending on the number of total days
-'''
 if(number_days == possible_days[0]):
 	number_persons = range(3,upper_bound,2)
 elif(number_days == possible_days[1]):
@@ -41,11 +41,11 @@ elif(number_days == possible_days[2]):
 
 #Print Input Parameters
 print("*** INITIAL SETTINGS ***")
-print("Birthday Paradox numbers for the simulation:")
 if(isProb):
 	print("Goal: Find probability of conflict")
 else:
 	print("Goal: Find minimum number of people needed to experience a collision")
+print("Birthday Paradox numbers for the simulation:")
 print("Number of days ",number_days)
 if(isProb):
 	print("Number of persons ",number_persons)
@@ -56,11 +56,10 @@ print("*** END INITIAL SETTINGS ***")
 
 # function to compute confidence intervals
 def evaluate_conf_interval(x):
-	# x is list of all the experimental rules, one for each run
 	t_sh = t.ppf((confidence_level + 1) / 2, df=runs - 1) # threshold for t_student
 
 	if(isProb):
-		ave = x # average
+		ave = x # average. This is the total number of collision divided by the total number of persons
 		stddev = x*(1-x) # std dev
 		ci = t_sh * stddev / np.sqrt(runs) # confidence interval half width
 	else:
@@ -69,12 +68,12 @@ def evaluate_conf_interval(x):
 		ci = t_sh * stddev / np.sqrt(runs) # confidence interval half width
 
 	#print(ave, stddev, t_sh, runs, ci, ave)
-	rel_err = ci / ave if ave>0 else 0# relative error
+	rel_err = ci / ave # if ave>0 else # relative error
 	return ave, ci, rel_err
 
 def run_simulator(pers): # run the birthday paradox model
 	random.seed(a=initial_seed) # reset initial seed
-	confli_value = 0.0 
+	confli_value = 0 
 	#This case is for the minimum value case
 	number_people_conf = np.full(runs, 0)
 	for r in range(runs): # for each run
@@ -88,7 +87,7 @@ def run_simulator(pers): # run the birthday paradox model
 		#This variable is for the minimun value case
 		conflict_number = -1
 
-		#The maximum number of iteration changes depending on the value of isPorb
+		#The maximum number of iteration changes depending on the value of isProb
 		#'number_days+1' means that we have 100% to experience a conflict
 		max_value_iter = pers if isProb else number_days+1
 		for i in range(max_value_iter): # for each person
@@ -109,6 +108,7 @@ def run_simulator(pers): # run the birthday paradox model
 	else:
 		theoretic_value = math.sqrt(math.pi/2*number_days)
 		ave, ci, rel_err = evaluate_conf_interval(number_people_conf)
+		print(f'Simulated: {ave:.2f}, Theoretical: {theoretic_value:.2f}, Difference mean-theoretical: {(ave-theoretic_value):.2f}, CI: {(ci):.2f}')
 		return ave - ci, ave, ave + ci, rel_err, theoretic_value
 
 #########################
@@ -133,4 +133,5 @@ for p in persons: # for each number of days and persons
 datafile.close() # close the file
 
 import os
-os.system(f"python PlotResultsProb.py {number_days}")  
+if(isProb): 
+	os.system(f"python PlotResultsProb.py {number_days} {runs}")  

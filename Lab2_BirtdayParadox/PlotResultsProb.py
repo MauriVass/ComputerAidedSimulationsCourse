@@ -10,10 +10,10 @@ def function(pers):
     return 1 - math.exp(-pers**2/(2*days))
 
 days = int(sys.argv[1])
-runs = 750
+runs = int(sys.argv[2])
 data = pd.read_csv(f'outputProb{days}.dat',sep='\t')
 
-Ns = list(data['persons'])
+Ns = np.array(data['persons'])
 n = max(Ns)
 x = np.arange(min(Ns),n+1)
 
@@ -21,7 +21,7 @@ func = np.vectorize(function)
 y = func(x)
 
 
-means = list(data['ave'])
+means = np.array(data['ave'])
 lb = np.array(data['ciLow'])
 ub = np.array(data['ciHigh'])
 CIs = ub-lb
@@ -38,6 +38,9 @@ plt.ylabel('Probability Conflict')
 title = f'Probability Conflict: Days= {days} and Runs= {runs}'
 plt.title(title)
 
-save_title = (f'../Report/Images/Lab2/{title}').replace('=','').replace(' ','').replace(':','')
+remove_chars = [' ','=',':']
+for r in remove_chars:
+	title = title.replace(r,'')
+save_title = (f'Images/{title}')
 plt.savefig(save_title)
 plt.show()
