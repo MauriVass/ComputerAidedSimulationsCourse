@@ -7,20 +7,22 @@ import math
 # initial settings
 initial_seed = 2500
 confidence_level = 0.95
-runs = 180 # number of runs
-#True -> find probability of conflict
-#False -> find minimum number of people needed to experience a collision
-isProb = False
 
 #Index for the number of days required: 0:365, 1:10**5, 2:10**6
 index_day = int(sys.argv[1])
 possible_days = [365, 10**5, 10**6]
 number_days = possible_days[index_day]
 
+runs = int(sys.argv[2]) # number of runs
+#True -> find probability of conflict
+#False -> find minimum number of people needed to experience a collision
+isProb = False
+
+
 if(isProb):
 	#Calculate lower and upper bounds using the theoretical formula
-	people_lower_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.05))) )#The lower bound is calculated with probability 0.1
-	people_upper_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.95))) )#The upper bound is calculated with probability 0.9
+	people_lower_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.05))) )#The lower bound is calculated with probability 0.05
+	people_upper_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.95))) )#The upper bound is calculated with probability 0.95
 	#Use a number of points increasing with the number of days
 	step = int((people_upper_bound - people_lower_bound) / 20 + 5*index_day)
 	number_persons = range(people_lower_bound,people_upper_bound,step)
@@ -60,7 +62,7 @@ def evaluate_conf_interval(x):
 
 	if(isProb):
 		ave = x # average. This is the total number of collision divided by the total number of persons
-		stddev = x*(1-x) # std dev
+		stddev = np.sqrt(x*(1-x)) # std dev
 		ci = t_sh * stddev / np.sqrt(runs) # confidence interval half width
 	else:
 		ave = x.mean() # average
@@ -108,7 +110,7 @@ def run_simulator(pers): # run the birthday paradox model
 	else:
 		theoretic_value = math.sqrt(math.pi/2*number_days)
 		ave, ci, rel_err = evaluate_conf_interval(number_people_conf)
-		print(f'Simulated: {ave:.2f}, Theoretical: {theoretic_value:.2f}, Difference mean-theoretical: {(ave-theoretic_value):.2f}, CI: {(ci):.2f}')
+		print(f'Simulated: {ave:.2f}, Theoretical: {theoretic_value:.2f}, Difference mean-theoretical: {(ave-theoretic_value):.2f}, CI: {(ci):.2f}, RelErr: {(2*ci/ave):.2f}')
 		return ave - ci, ave, ave + ci, rel_err, theoretic_value
 
 #########################
