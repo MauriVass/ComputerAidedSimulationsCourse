@@ -1,8 +1,9 @@
 import hashlib
 import math
-import time #To remove
 import sys
 from pympler import asizeof
+import numpy as np
+from scipy.stats import t
 
 file = open('words_alpha.txt','r')
 
@@ -10,20 +11,20 @@ words = []
 for f in file:
 	words.append(f)
 number_words = len(words)
-print(f'Number of Words: {number_words} {math.log(number_words)}')
+print(f'Number of Words: {number_words} {math.log(number_words,2)}')
 
 debug = False
 
 min_num_bits = 0
 #Start searching from a bigger number than the theoretical one
-max_num_bits = math.ceil(math.log(number_words,2)) * 5
+max_num_bits = math.ceil(math.log(number_words,2)) * 2
 conflictHappened = True
 end_loop = False
 min_found = 999
 
 print('\nSimulation')
 ###	BINARY SERACH	###
-while(end_loop is False): #Loop until any conflict is found
+while(end_loop is False): #Loop until no conflict is found
 	conflictHappened = False
 	#Start from the middle point between min and max
 	num_bits = min_num_bits + math.ceil((max_num_bits - min_num_bits)/2)
@@ -50,19 +51,21 @@ while(end_loop is False): #Loop until any conflict is found
 
 	if(conflictHappened is False): #No Conflict
 		print(f'{num_bits} #bits are enough')
-		#No conflit is found this means that the number of bits must be decreased, since a lower number may be found
+		#No conflit is found this means that the number of bits must be decreased
+		#The search continues since a lower number may be found
 		max_num_bits = num_bits
 		#Store the minimum number of bits found so far
 		min_found = num_bits if num_bits<min_found else min_found
 	#Stop searching condition: no integer number between min and max
 	if((max_num_bits - min_num_bits)/2<1):
 		print('End loop: ', min_found)
+		num_bits = min_found
 		end_loop = True
 #If the value of min_found does not change, it means the the initial max point was too low. Exit
 if(min_found==999):
-	print('ERROR!! Starting point: max_num_bits has a too low value. Try increase it!')
+	print('ERROR!! Starting point \'max_num_bits\' value was too low. Try increasing it!')
 	exit(0)
-
+print(f'Found: {num_bits}')
 ###	Normal SERACH	###
 # conflict = True
 # step = 0
@@ -95,13 +98,63 @@ print('End Simulation\n')
 ###	b^teo	###
 #prob(conflic) = 1 - (1-1/number_words)**number_words
 #b_teo = math.log( number_words/0.5 ,2)
-b_teo = math.log( math.sqrt( 2*number_words* math.log(1.0/(1-0.5),2) ) , 2 )
+b_teo = math.log( math.sqrt( 2*number_words* math.log(1.0/(1-0.5),2) ) , 2)
 print(f'Theoretica number of bits reqired: {b_teo:.2f}')
 
 ###	Relation b^exp and b_teo	###
-print(f'Ratio Simulated and Theoretical number of bits {(min_num_bits/b_teo):.2f}')
+print(f'Ratio Simulated and Theoretical number of bits: {min_num_bits}/{b_teo:.2f}={(min_num_bits/b_teo):.2f}')
 
-### Memmory to store the hash table	###
+###	Min theoretical required memory ###
+#The average english words length is 4.7 characters
+#total_size_Byte = num_words * bits_for_word / 8 bits
+theoretical_size = (number_words * num_bits)/8
+
+### Memory to store the hash table	###
+#asizeof returns the size in Bytes
 size_array = asizeof.asizeof(words)
 size_hashtable = asizeof.asizeof(hash_words)
-print(f'Memory required to store the hash table: {int(size_hashtable/1000)}kB, the array: {int(size_array/1000)}kB')
+print(f'Memory required to store the hash table: {(size_hashtable/(1024**2)):.3f} MB, the array: {(size_array/(1024**2)):.3f} MB, theoretical memory: {(theoretical_size/(1024**2)):.3f} MB')
+
+def generateWord(max_val):
+	return int(np.random.uniform(high=max_val))
+
+def evaluate_conf_interval(x):
+	t_sh = t.ppf((confidence_level + 1) / 2, df=n_runs - 1) # threshold for t_student
+
+	ave = x.mean() # average
+	stddev = x.std(ddof=1) # std dev
+	ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
+	# ave = x # average. This is the total number of collision divided by the total number of persons
+	# stddev = np.sqrt(x*(1-x)) # std dev
+	# ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
+
+	#print(ave, stddev, t_sh, runs, ci, ave)
+	rel_err = ci / ave # if ave>0 else # relative error
+	return ave, ci, rel_err
+
+def run_simulator(num_bits):
+	np.random.seed(initial_seed)
+	print(f'Num bits: {num_bits}')
+	storage_length = 2**num_bits
+
+	prob_collision = np.zeros(n_runs)
+	for r in range(n_runs):
+		num_collision = 0
+		number_words_checkcollision = 1000
+		for i in range(number_words_checkcollision):
+			word_index = generateWord(storage_length)
+			if(word_index in hash_words): #Conflict
+				num_collision+=1
+
+		prob = num_collision/number_words_checkcollision
+		prob_collision[r] = prob
+	print(prob_collision)
+	theoretical_occupacy = number_words/storage_length
+	ave, ci, rel_err = evaluate_conf_interval(prob_collision)
+	return num_bits, ave - ci, ave, ave + ci, rel_err, theoretical_occupacy
+
+confidence_level = 0.95
+initial_seed = 1234
+n_runs = 5
+outp = run_simulator(num_bits)
+print(outp)
