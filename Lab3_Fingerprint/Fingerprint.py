@@ -74,7 +74,8 @@ print(f'Found: {num_bits}')
 # 	num_bits = step
 # 	storage_length = 2**num_bits
 
-# 	hash_words = set()
+# 	#hash_words = set()
+# 	hash_words = np.zeros(storage_length)
 # 	for w in words:
 # 		#Calculate Hash
 # 		word_hash = hashlib.md5(w.encode('utf-8'))
@@ -82,12 +83,20 @@ print(f'Found: {num_bits}')
 # 		#Calculate element index [0,storage_length-1]
 # 		h = word_hash_int % storage_length
 
-# 		if(h in hash_words):  #Conflict
+# 		# if(h in hash_words):  #Conflict
+# 		# 	print(f'{num_bits} #bits are NOT enough')
+# 		# 	conflict = True
+# 		# 	break
+# 		# else:
+# 		# 	hash_words.add(h)
+# 		if(hash_words[h]==0): #Conflict
 # 			print(f'{num_bits} #bits are NOT enough')
+# 			#A conflit is found this means that the number of bits must be increased
+# 			min_num_bits = num_bits 
 # 			conflict = True
 # 			break
 # 		else:
-# 			hash_words.add(h)
+# 			hash_words[h] = 1
 # 	#Any conflict found. Exit loop
 # 	if(conflict==False):
 # 		print('found: ',step)
@@ -96,17 +105,17 @@ print(f'Found: {num_bits}')
 print('End Simulation\n')
 
 ###	b^teo	###
-#prob(conflic) = 1 - (1-1/number_words)**number_words
-#b_teo = math.log( number_words/0.5 ,2)
-b_teo = math.log( math.sqrt( 2*number_words* math.log(1.0/(1-0.5),2) ) , 2)
+#https://stackoverflow.com/questions/62664761/probability-of-hash-collision
+b_teo = math.log( (2*storage_length*math.log(1/(1-0.5))) ,2)
+#b_teo = math.ceil(b_teo)
 print(f'Theoretica number of bits reqired: {b_teo:.2f}')
 
 ###	Relation b^exp and b_teo	###
-print(f'Ratio Simulated and Theoretical number of bits: {min_num_bits}/{b_teo:.2f}={(min_num_bits/b_teo):.2f}')
+print(f'Ratio Simulated and Theoretical number of bits: {num_bits}/{b_teo:.2f}={(num_bits/b_teo):.2f}')
 
 ###	Min theoretical required memory ###
 #The average english words length is 4.7 characters
-#total_size_Byte = num_words * bits_for_word / 8 bits
+#total_size_Byte = number_words * bits_for_word / 8 bits
 theoretical_size = (number_words * num_bits)/8
 
 ### Memory to store the hash table	###
@@ -129,7 +138,7 @@ def evaluate_conf_interval(x):
 	# ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
 
 	#print(ave, stddev, t_sh, runs, ci, ave)
-	rel_err = ci / ave # if ave>0 else # relative error
+	rel_err = ci / ave if ave>0.001 else -1
 	return ave, ci, rel_err
 
 def run_simulator(num_bits):
@@ -140,7 +149,7 @@ def run_simulator(num_bits):
 	prob_collision = np.zeros(n_runs)
 	for r in range(n_runs):
 		num_collision = 0
-		number_words_checkcollision = 1000
+		number_words_checkcollision = 10000
 		for i in range(number_words_checkcollision):
 			word_index = generateWord(storage_length)
 			if(word_index in hash_words): #Conflict
@@ -155,6 +164,6 @@ def run_simulator(num_bits):
 
 confidence_level = 0.95
 initial_seed = 1234
-n_runs = 5
-outp = run_simulator(num_bits)
-print(outp)
+#n_runs = 5
+#outp = run_simulator(num_bits)
+#print(outp)
