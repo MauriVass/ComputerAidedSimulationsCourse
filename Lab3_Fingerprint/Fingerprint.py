@@ -7,10 +7,10 @@ from scipy.stats import t
 
 file = open('words_alpha.txt','r')
 
-words = []
+words_list = []
 for f in file:
-	words.append(f)
-number_words = len(words)
+	words_list.append(f)
+number_words = len(words_list)
 print(f'Number of Words: {number_words} {math.log(number_words,2)}')
 
 debug = False
@@ -32,22 +32,22 @@ while(end_loop is False): #Loop until no conflict is found
 		print(f'Min: {min_num_bits}, Max: {max_num_bits}, #Bits: {num_bits}')
 	storage_length = 2**num_bits
 
-	hash_words = set()
-	for w in words:
+	fingerprint_table = set()
+	for w in words_list:
 		#Calculate Hash
 		word_hash = hashlib.md5(w.encode('utf-8'))
 		word_hash_int = int(word_hash.hexdigest(), 16)
 		#Calculate element index [0,storage_length-1]
 		h = word_hash_int % storage_length
 
-		if(h in hash_words): #Conflict
+		if(h in fingerprint_table): #Conflict
 			print(f'{num_bits} #bits are NOT enough')
 			#A conflit is found this means that the number of bits must be increased
 			min_num_bits = num_bits 
 			conflictHappened = True
 			break
 		else:
-			hash_words.add(h)
+			fingerprint_table.add(h)
 
 	if(conflictHappened is False): #No Conflict
 		print(f'{num_bits} #bits are enough')
@@ -120,10 +120,16 @@ theoretical_size = (number_words * num_bits)/8
 
 ### Memory to store the hash table	###
 #asizeof returns the size in Bytes
-size_array = asizeof.asizeof(words)
-size_hashtable = asizeof.asizeof(hash_words)
-print(f'Memory required to store the hash table: {(size_hashtable/(1024**2)):.3f} MB, the array: {(size_array/(1024**2)):.3f} MB, theoretical memory: {(theoretical_size/(1024**2)):.3f} MB')
+size_list = asizeof.asizeof(words_list)
+size_hashtable = asizeof.asizeof(fingerprint_table)
+print(f'Memory required to store the fingerprint table: {(size_hashtable/(1024**2)):.3f} MB, the list: {(size_list/(1024**2)):.3f} MB, theoretical memory: {(theoretical_size/(1024**2)):.3f} MB')
 
+
+###	prob False Positive	###
+prob_false_pos = number_words / storage_length
+print(f'Probability False Positive: {prob_false_pos}')
+
+'''
 def generateWord(max_val):
 	return int(np.random.uniform(high=max_val))
 
@@ -167,3 +173,4 @@ initial_seed = 1234
 #n_runs = 5
 #outp = run_simulator(num_bits)
 #print(outp)
+'''
