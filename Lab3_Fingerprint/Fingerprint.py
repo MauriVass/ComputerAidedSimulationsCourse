@@ -3,7 +3,6 @@ import math
 import sys
 from pympler import asizeof
 import numpy as np
-from scipy.stats import t
 
 file = open('words_alpha.txt','r')
 
@@ -15,17 +14,22 @@ print(f'Number of Words: {number_words} {math.log(number_words,2)}')
 
 debug = False
 
-min_num_bits = 0
+#Initial min value of bits
+min_num_bits = 1
 #Start searching from a bigger number than the theoretical one
 max_num_bits = math.ceil(math.log(number_words,2)) * 2
-conflictHappened = True
+#This variable is used as loop exit condition: we found the minimum value of b^exp
 end_loop = False
+#This variable is used to store the minimum value of b^exp found and also
+#to understand if this value can be found with the given value of max_num_bits
 min_found = 999
 
 print('\nSimulation')
 ###	BINARY SERACH	###
-while(end_loop is False): #Loop until no conflict is found
+while(end_loop is False): #Loop until no conflict is found with the given b^exp value
+	#This variable tells of for a specific value of b^exp a conflict happened
 	conflictHappened = False
+
 	#Start from the middle point between min and max
 	num_bits = min_num_bits + math.ceil((max_num_bits - min_num_bits)/2)
 	if(debug):
@@ -34,7 +38,7 @@ while(end_loop is False): #Loop until no conflict is found
 
 	fingerprint_table = set()
 	for w in words_list:
-		#Calculate Hash
+		#Calculate word Hash
 		word_hash = hashlib.md5(w.encode('utf-8'))
 		word_hash_int = int(word_hash.hexdigest(), 16)
 		#Calculate element index [0,storage_length-1]
@@ -106,8 +110,8 @@ print('End Simulation\n')
 
 ###	b^teo	###
 #https://stackoverflow.com/questions/62664761/probability-of-hash-collision
-b_teo = math.log( (2*storage_length*math.log(1/(1-0.5))) ,2)
-#b_teo = math.ceil(b_teo)
+#Solving the eq of Birthday Paradox in function of n(=2^b)
+b_teo = math.log( -1*(number_words**2)/math.log(1-0.5)/2 ,2)
 print(f'Theoretica number of bits reqired: {b_teo:.2f}')
 
 ###	Relation b^exp and b_teo	###
@@ -122,7 +126,7 @@ theoretical_size = (number_words * num_bits)/8
 #asizeof returns the size in Bytes
 size_list = asizeof.asizeof(words_list)
 size_hashtable = asizeof.asizeof(fingerprint_table)
-print(f'Memory required to store the fingerprint table: {(size_hashtable/(1024**2)):.3f} MB, the list: {(size_list/(1024**2)):.3f} MB, theoretical memory: {(theoretical_size/(1024**2)):.3f} MB')
+print(f'Memory required to store the fingerprint table: {(size_hashtable/(1024**2)):.3f} MB, for the array: {(size_list/(1024**2)):.3f} MB, theoretical memory: {(theoretical_size/(1024**2)):.3f} MB')
 
 
 ###	prob False Positive	###
