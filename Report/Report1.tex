@@ -1,0 +1,383 @@
+\documentclass{report}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+
+\usepackage{graphicx}
+\graphicspath{ {Images/} }
+
+\usepackage{amsmath}
+\usepackage{hyperref}
+%\geometry{
+%	 a4paper,
+%	 total={170mm,257mm},
+%	 left=20mm,
+%	 right=20mm,
+%	 top=10mm,
+%	 bottom=10mm
+% }
+
+%For code pasting
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=1mm,
+  belowskip=1mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\begin{document}
+
+\begin{titlepage}
+   \begin{center}
+       %\vspace*{1cm}
+       \LARGE
+       \textbf{POLITECNICO DI TORINO}
+       \vspace{1cm}
+       
+       \includegraphics[scale=0.2]{logoPolito-1.png}
+       \vspace{0.8cm}
+       
+        \textbf{Computer aided simulations and performance evaluation}
+       \vspace{1.5cm}
+       
+       Academic year 2020/21
+       \vfill
+       \begin{flushright}
+       			\large
+            VASSALLO Maurizio, s276961
+       \end{flushright}
+   \end{center}
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Bins \& Balls}
+	 
+	\section{Introduction}
+	 
+	This experiment involves a number \emph{N} of bins and balls: for each ball we choose random bins, one or more than one, depending on the dropping policy, and we put the ball in one of those bins. The goal is to evaluate the maximum occupancy of the bins and compare the result with the theoretical one. There are 2 dropping policy:
+	\begin{itemize}
+		\item Random Dropping: for each ball we choose a random bin and we put the ball in it; 
+		\item Random Load Balancing: for each ball we choose \emph{d} random bins and we fill the one with less(a lower(?)) occupancy. In this simulation the values of \emph{d} used are 2 and 4.
+	\end{itemize}
+
+	\section{Tasks}
+	 
+		\subsection{Define all the input parameters of the simulator}
+			The input parameters of the simulation are:
+			\begin{itemize}
+				\item Number N of bins and balls;
+				\item The seed value used to generate pseudo-random numbers;
+				\item The confidence level used to calculate the confidence intervals;
+				\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results.
+			\end{itemize}
+			 
+	\subsection{Define all the output metrics of the simulator}
+			The output metrics of the simulation are:
+			\begin{itemize}
+				\item Number N of bins and balls;
+				\item The erlow confidence interval value;
+				\item The average max occupancy value;
+				\item The upper confidence interval value;
+				\item The relative error.
+			\end{itemize}
+			All these value are stored in a file and each field is tab separated.
+	
+	\subsection{Define the main data structures for the simulator}
+			The data structure used is an array where to store the bin occupancy at position \emph{i}. This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$).
+			
+	\subsection{Describe the architecture of the simulator in terms of source files and output files}
+			The whole simulation runs inside a script where the simulator runs multiple times for multiple values of bins and balls. \\
+			At each iteration the output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of bins and balls used. This .dat file is then elaborated by a script in order to create the plots. There are 3 scripts for plotting:
+			\begin{itemize}
+				\item One takes care of plotting the results of the simulation to have a comparison with the theoretical occupancy values;
+				\item One plots the different performances of the dropping policy;
+				\item One plots the relative errors for different values of the number of runs;
+			\end{itemize}
+			
+			\subsection{For the random dropping policy, show the coherence of the simulation results with the theoretical bounds, for N in [100; 10\^6]. Show the effect of varying the number of runs for each experiment on the relative error}
+			
+			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns3.png}
+			It is possible to see that 3 runs are not enough since the confidence interval is not inside the theoretical values.
+			The lower bound are calucaled using the formula:
+			
+			\begin{equation} \label{eq:1}
+				 \text{max occupacy = }\frac{\log n}{\log \log n} 
+			\end{equation}
+			\begin{center}
+					where \emph{n} is the number of persons.
+			\end{center}
+			While the upper bound is just 3 times this formula.
+			
+			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns5.png}
+			It is possible to see that 5 runs are enough since the confidence interval is inside the theoretical values.
+			
+			\includegraphics[scale=0.6]{Lab1/RandomLoadBalancingd2Runs3.png}
+			Even with 3 runs the Load Balancing with \emph{d=2} is near to the theoretical value.
+			\begin{equation} \label{eq:2}
+				 \text{max occupacy = }\frac{\log \log n}{\log d}
+			\end{equation}
+			\begin{center}
+					where \emph{n} is the number of persons and \emph{d} the number of random bins chosen.
+			\end{center}
+			It is possible to see that this formula is much smaller than formula \ref{eq:1}, so we expect a lower occupacy value.
+			
+			\includegraphics[scale=0.6]{Lab1/RandomLoadBalancingd4Runs3.png}
+			Even with 3 runs the Load Balancing with \emph{d=4} is quite near to the theoretical value. 
+			It is possible to see that the average occupacy is lower with respect to the Load Balancing with \emph{d=2} (The 2 plots have the same y-axis scale).
+			
+			\includegraphics[scale=0.6]{Lab1/ComparisonamongPolicies,Runs=5.png}
+			With this graph it is possible can better see the differences between the different policies and in particular: the Balacing policy works better than the Random one and that increasing the number of bins selected the maximum occupacy decreases. \\ There must be a trade-off between the number of bins and the latency script execution time because with large values of \emph{d} the occupacy decreases but the execution time increases: in the extreme case with \emph{d=\#bins} we would put the ball in the least occupied bins (equal to execute \emph{np.argmin(bins)}) and have an aveage maximum occupacy of 1 (one ball in each bin)  but that would require some time, expecially for large number of bins.
+			
+			\includegraphics[scale=0.6]{Lab1/RelativeErrorsRandomDroppingPolicy.png}
+			It is possible to see that the relative errors decrease with increasing the number of runs. 
+			
+			\begin{equation} \label{eq:3}
+				 \text{rel\_error = }2\frac{\Delta}{x}
+			\end{equation}
+			\begin{center}
+					where $\Delta$ is the \emph{CI}.
+			\end{center}
+			The same happens for the Loading Balancing policy; graphs are omitted.
+			
+\chapter{Birthday Paradox}
+	 
+	 \section{Introduction}
+	 
+	This experiment involves a number \emph{m} people: for each person a random number, the birthday in the case of Birthday Paradox, is chosen among \emph{n} possible values, the 365 days in case of Birthday Paradox. The goal is to evaluate:
+	\begin{itemize}
+		\item The probability of conflict. A conflict is experieced two people have the same random number (same birthday);
+		\item The minimum number of people required for a conflict.
+	\end{itemize}
+
+	\section{Tasks}
+	 
+		\subsection{Define all the input parameters of the simulator}
+			The input parameters of the simulation are:
+			\begin{itemize}
+				\item Number of possible ``days'': in this simulation, this value can be: [365, 100000, 1000000];
+				\item The seed value used to generate pseudo-random numbers;
+				\item The confidence level used to calculate the confidence intervals;
+				\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results.
+				\item A flag depending if we want to calculate the conflict probability or the minimum number of people needed to experience a conflict.
+			\end{itemize}
+			 
+	\subsection{Define all the output metrics of the simulator}
+			The output metrics of the simulation are:
+			\begin{enumerate}
+					\item Conflict Probability:
+					\begin{itemize}
+							\item Number N of persons;
+							\item The lower confidence interval value;
+							\item The probability of conflict;
+							\item The upper confidence interval value;
+							\item The relative error.
+					\end{itemize}
+					\item Minimum number of people:
+					\begin{itemize}
+							\item The lower confidence interval value;
+							\item The average number of people to experience a conflict;
+							\item The upper confidence interval value;
+							\item The relative error;
+							\item The theoretica value.
+					\end{itemize}
+			\end{enumerate}
+			All these value are stored in a file and each field is tab separated.
+	
+	\subsection{Define the main data structures for the simulator}
+				The data structure used is a binary array where to store whether the element (day in the case of Birthday Paradox) at position \emph{i} is occupied or not (0 means free, 1 means occupied: in the case of Birthday Paradox, in that day there is already, at least, one person who was born in that day).// This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$). \\
+				For the calculation of the probability there is a counter that keeps how many conflicts happened. This is used to calculate the probability as $prob(conf)=\frac{\#conflicts}{\#people}$ at each run. \\
+				For the minimun number of people there is a an array storing the minimun number of people for a conflict at each run.
+			
+	\subsection{Describe the architecture of the simulator in terms of source files and output files}
+			The whole simulation runs inside a script where the simulator runs multiple times for multiple values of people or just one in the case of finding the minimum number of people for a conflict. \\
+			At each iteration the output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of people or just one line in the case of minimum case. This .dat file is then elaborated by a script to create the plots.
+		
+		\subsection{Show the graph comparing the conflict probability with respect to the theoretical value,
+for each value of m.}
+				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays365andRuns200.png}
+				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays100000andRuns250.png}
+				The results obtained with 200 runs were not satisfying so the number of runs is increased to 250.
+				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays1000000andRuns250.png}
+				Even with 180 runs the simulation is not very close to the theoretical result. \\
+				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays1000000andRuns600.png}
+				Better results can be obtained increasing a lot the number of runs but such a huge number of runs requires more time to be executed.
+				
+		\subsection{Is the theoretical formula for the conflict probability accurate?}
+				Yes, how it can be seen from the previous graphs, the formula is accurate but for large number of days it is less accurate and it requires an higher number of runs.
+				
+		\subsection{Is it possible to estimate a-priori the range of m such that the probability in the graph covers all the range in [0; 1]?}
+				Yes, it is possible using the following formula:
+				\[
+						num\_elements \: = \: \sqrt{2 \times number\_days \times \log{ \left( \frac{1}{1-p} \right) } }
+				\]
+				\begin{center}
+							where \emph{p} is the wanted probability, $ p \in [0,1)$.
+				\end{center}
+		With this formula it is possible to find all values of \emph{m} given a value of \emph{p}, the only value non possible to find is \emph{p=1} since this is not allowed in the formula (division by 0) but we have $100\%$ probability of conflict if $number\_days+1$ elements (people) are chosen.
+		
+		\subsection{Fill the following table and comment about the accuracy of the theoretical formula.}
+				\begin{table}[h]
+							\centering
+							%|l|l|l|l|l|l|
+							\begin{tabular}{|c|c|c|c|c|c|c|}
+							\hline
+							\multicolumn{1}{|c|}{\textbf{n}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}\# runs\end{tabular}}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Average number of people\\ needed for a conflict\end{tabular}}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}95\% confidence\\ intervals\end{tabular}}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Theoretical\\ value\end{tabular}}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}MAE\end{tabular}}}\\ \hline
+							%							days				runs								simul												CI						theor										MAE
+							\textbf{365}            & 200 		& 22.64									& 1.63      & 23.94									& 1.30										 					\\ \hline
+							\textbf{100000}       &	250			& 401.72       & 27.13    & 396.33      	& 5.39								\\ \hline
+							\textbf{1000000}     &	250			& 1154.26     & 79.76				&	1253.31      & 99.05							\\ \hline
+							\textbf{1000000}     &	400			& 1253.31     & 63.19			&	1253.31      & 53.76							\\ \hline
+							\end{tabular}
+				\end{table}
+			The number of runs are chosen such that the relative errors ( \ref{eq:3}) were under $0.15$ but in case of $10^6$ days the relative error is a bit smaller than the others ($0.11$ vs $0.14$) since with $250$ runs the MAE value was greater than the CI value.
+			
+			
+			
+			
+			
+\chapter{Laboratory \#3}
+	 \subsubsection{Introduction}
+				This experiment involves the usage of the english dictionary to check the performance of different data structures. 
+	 
+	 \section{Fingerprinting}	 
+	 
+			 	\subsection{Let w be the number of words available in the file. What is w?}
+								The english word dictionary contains $370103$ words.
+								
+			 	\subsection{By simulation, compute the minimum value of bits $b^{exp}$ such that no collisions are experienced when storing the whole list of English words in a fingerprint set}
+						The minimum number of bits necessary to store all the words in a data structure without conflicts is: $b^{exp} = 36$ bits.
+						
+				\subsection{Define all the input parameters of the simulator}
+					The input parameters of the simulation are:
+					\begin{itemize}
+						\item The file containing the english words;
+						\item An upper bound for the number of bits. This will be used in a Binary Search algorithm to find the minimum value of bits $b^{exp}$ such that no collisions are experienced.
+					\end{itemize}
+					 
+				\subsection{Define all the output metrics of the simulator}
+					The output metrics of the simulation are:
+					\begin{enumerate}
+							\item The value of $b^{exp}$;
+							\item The theoretica value of b: $b^{teo}$;
+							\item The storage  memory required for the data structures and the theoretical storage memory;
+							\item The probability of false positive using a  $b^{exp}$ fingerprint set.
+					\end{enumerate}
+					All these value are stored in a file and each field is tab separated.
+			
+			\subsection{Define the main data structures for the simulator}
+						There are 2 main data structures used: 
+							\begin{itemize}
+								\item A python list where to store all the english words;
+								\item A python set where to store the fingerprint of each english word.
+								\end{itemize}
+						After storing all the words, to find the minimum value of bits $b^{exp}$ such that no collisions are experienced, for each one of these a fingerprint is calculated:
+						\begin{itemize}
+								\item[] Each word is encode using the UTF-8 character encoding, then the MD5 hash is calculated. This MD5 hash returns a 128 bits value but since it is required to have fingerprint length is $b^{exp}$ bits, the MD5 hash value is converted to integer and only the last  $b^{exp}$ bits are taken; this is done with the module operation: \[ fingerprint\_value = word\_hash\_int \: \% \: 2^{b^{exp}} \]
+						\end{itemize}
+						This operation is repeated one time for each candidate $b^{teo}$ value until the minimum value possible is found. In particular this search is performed using a Binary Search algorithm; to write is a bit more complex than other algorithms but it is faster: for example is faster than an alogorithm that checks all numbers between 1 and infinite and stops as soon it find a value of $b^{exp}$ such that any collision is found.
+					
+			\subsection{Compute analytically the number of bit $b^{teo}$ necessary to get a probability $0.5$ of fingerprint collision when building the dictionary with a fingerprint set}
+					It is possible to analitically compute the minimum number of bits given a specified probability using the following formula:
+					\[
+						b^{teo} \: = \: \log_2{ \left( \frac{num\_words^2}{2\times \ln\left({1-p}\right)} \right)}
+					\]
+			\subsection{How $b^{exp}$ and $b^{teo}$ are related?}
+					The theoretical value and the simulaed value are really close: 
+					\[
+							b^{exp} \: = \: 36; \; 	b^{teo} \: = \: 36 \: \text{(the decimal value is 35.52)}
+					\]
+			
+			\subsection{Evaluate the theoretical minimum amount of memory necessary to store the whole dictionary in a $b^{exp}$-fingerprint set and in a word set}
+			The theoretical memory necessary to store all the words using a $b^{exp}$ fingerprint would be \[ theoretical\_size \: = \: \frac{(number\_words \times num\_bits)}{8} \: = \: 1.58 \text{MB}\]
+						
+			\subsection{Measure the actual amount of memory necessary to store the whole dictionary in a $b^{exp}$ fingerprint set and in a word set in your python implementation}
+			To calculate the memory used by an object in python it is possible to use the \emph{asizeof(obj)} from the \emph{pympler} library. This returns the memory in bytes of a given object.
+			\begin{center}
+					Memory required to store the fingerprint table: 16.02 MB, for the array of words: 15.28 MB
+			\end{center}
+			
+			\subsection{Assume a spell checker application in which a given word is compared with the words in the dictionary. Compute the probability of false positive for the $b^{exp}$-fingerprint set}
+			There are different ways to calculate the probability of false positive, simulation is one of this. But in this case is not needed since it is possible to calculate the probability of false positive analitically, using the following formula:
+			\begin{center}
+					prob(false\_pos) = number\_words / $2^{b^{exp}}$
+			\end{center}
+			
+			\subsection{To summarize all the previous results.}
+			\begin{center}
+					\begin{table}[h!]
+					\begin{tabular}{|l|l|l|l|l|}
+					\hline
+					\multicolumn{1}{|c|}{\textbf{Storage}} &
+					  \textbf{\begin{tabular}[c]{@{}l@{}}Bits per \\ fingerprint\end{tabular}} &
+					  \textbf{\begin{tabular}[c]{@{}l@{}}Prob. \\ false positive\end{tabular}} &
+					  \textbf{\begin{tabular}[c]{@{}l@{}}Min theoretical \\ memory (Mb)\end{tabular}} &
+					  \textbf{\begin{tabular}[c]{@{}l@{}}Actual\\ memory (Mb)\end{tabular}} \\ \hline
+					\textbf{\begin{tabular}[c]{@{}l@{}}Word set\\ Fingerprint set\end{tabular}} &
+					  \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}N.A.\\ 36\end{tabular}} &
+					  \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}0\\ 0\end{tabular}} &
+					  \multicolumn{1}{c|}{1.58} &
+					  \multicolumn{1}{c|}{\begin{tabular}[c]{@{}c@{}}15.28\\ 16.02\end{tabular}} \\ \hline
+					\end{tabular}
+					\end{table}
+			\end{center}
+			
+			\section{Bit String Array}	 
+	 
+				\subsection{Define all the input parameters of the simulator}
+					The input parameters of the simulation are:
+					\begin{itemize}
+						\item The file containing the english words;
+						\item An upper bound for the number of bits. This will be used in a Binary Search algorithm to find the minimum value of bits $b^{exp}$ such that no collisions are experienced.
+					\end{itemize}
+					 
+				\subsection{Define all the output metrics of the simulator}
+					The output metrics of the simulation are:
+					\begin{enumerate}
+							\item The value of $b^{exp}$;
+							\item The theoretica value of b: $b^{teo}$;
+							\item The storage  memory required for the data structures and the theoretical storage memory;
+							\item The probability of false positive using a  $b^{exp}$ fingerprint set.
+					\end{enumerate}
+					All these value are stored in a file and each field is tab separated.
+			
+			\subsection{Define the main data structures for the simulator}
+						There are 2 main data structures used: 
+							\begin{itemize}
+								\item A python list where to store all the english words;
+								\item A python set where to store the fingerprint of each english word.
+								\end{itemize}
+						After storing all the words, to find the minimum value of bits $b^{exp}$ such that no collisions are experienced, for each one of these a fingerprint is calculated:
+						\begin{itemize}
+								\item[] Each word is encode using the UTF-8 character encoding, then the MD5 hash is calculated. This MD5 hash returns a 128 bits value but since it is required to have fingerprint length is $b^{exp}$ bits, the MD5 hash value is converted to integer and only the last  $b^{exp}$ bits are taken; this is done with the module operation: \[ fingerprint\_value = word\_hash\_int \: \% \: 2^{b^{exp}} \]
+						\end{itemize}
+						This operation is repeated one time for each candidate $b^{teo}$ value until the minimum value possible is found. In particular this search is performed using a Binary Search algorithm; to write is a bit more complex than other algorithms but it is faster: for example is faster than an alogorithm that checks all numbers between 1 and infinite and stops as soon it find a value of $b^{exp}$ such that any collision is found.
+					
+			\subsection{Show in a graph the probability of false positive in function of the number of bits per fingerprint.}
+			
+			\subsection{Measure the actual memory occupancy in function of the number of bits per fingerprint.}
+			
+			\subsection{To summarize all the previous results, fill the following table and compare these results with the ones obtained in the table of Sec. 2.1.1}
+			
+\end{document}
