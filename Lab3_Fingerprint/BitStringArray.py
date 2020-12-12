@@ -57,13 +57,17 @@ def run_simulator(num_bits):
 	storage_length = 2**num_bits
 	bit_string_array = np.zeros(storage_length)
 
+	#Use a different number of hashes depensing if it is a BitString Array (1 hash)
+	#Or it is a Bloom filter application (k hashes)
 	if(bloom_filter==0):
 		num_hashes = 1
 	else:
+		#Theoretical formula to calculate the number of hashes needed
+		#You should check both upper and lower integer( ceil() and floor() ) and pick the best one
+		#But usually truncate to the near integer works fine
 		num_hashes = int((storage_length/number_words)*math.log(2))
 		num_hashes = num_hashes if num_hashes > 0 else 1
-		num_hashes = 34
-	#num_hashes = 1
+
 	for w in words:
 		#Calculate Hash
 		word_hash = hashlib.md5(w.encode('utf-8'))
@@ -82,22 +86,30 @@ def run_simulator(num_bits):
 	prob_collision = np.zeros(n_runs)
 	for r in range(n_runs):
 		num_collision = 0
-		number_words_checkcollision = 100000
+		number_words_checkcollision = 1000
 		for i in range(number_words_checkcollision):
+			#Generate 'fake' word hash(es). Fake because they are just rnd number between [0,n)
 			word_indexes = [generateWord(storage_length) for _ in range(num_hashes)]
 			#print(word_indexes)
 			isPresent = True
+			#Loop over all fake word hashes to check if the word is present but shouldn't
+			#All bit_string_array[word_index] should be 1 for a collision -> 
+			#if just one is 0 it means that the fake word is not present
 			for word_index in word_indexes:
 				if(bit_string_array[word_index]==0): #Conflict
 					isPresent=False
 					break
+			#If present is True it means the the fake word is present
 			if(isPresent):
 				num_collision+=1
 		prob = num_collision/number_words_checkcollision
 		prob_collision[r] = prob
-	theoretical_occupacy = number_words/storage_length
+
+	#pr(FP)=pr(for each k, bs_arr[k]=1)=(# 1s/# length)^k
+	theoretical_probability = (np.sum(bit_string_array)/storage_length)**num_hashes
 	ave, ci, rel_err = evaluate_conf_interval(prob_collision)
-	return num_bits, num_hashes, ave - ci, ave, ave + ci, rel_err, theoretical_occupacy
+	memory_occupacy = asizeof.asizeof(bit_string_array)
+	return num_bits, num_hashes, ave - ci, ave, ave + ci, rel_err, theoretical_probability, memory_occupacy
 	
 	# prob_false_pos = number_words / storage_length
 	# size_bitarray = asizeof.asizeof(bit_string_array)
@@ -115,10 +127,10 @@ print(f'Number of Words: {number_words}')
 
 initial_seed = 2500
 confidence_level = 0.95
-n_runs = 3
+n_runs = 4
 
 datafile = open(f"bit_string_array{bloom_filter}.dat", "w")
-print("nbits\tnHashes\tciLow\tave\tciHigh\trel_err\ttheoretical",file=datafile)
+print("nbits\tnHashes\tciLow\tave\tciHigh\trel_err\ttheoreticalProb\tmemOccupacy",file=datafile)
 #print("num_bits, ave - ci, ave, ave + ci, rel_err, theoretical_occupacy")
 # print("nbits\tprob_FalsePos\tsize\ttheoretical_size",file=datafile)
 
