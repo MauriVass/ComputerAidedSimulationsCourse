@@ -50,12 +50,11 @@ def evaluate_conf_interval(x):
 	rel_err = ci / ave if ave>0 else 0
 	return ave, ci, rel_err
 
-bloom_filter = int(sys.argv[1])
 def run_simulator(num_bits):
 	np.random.seed(initial_seed)
 	print(f'Num bits: {num_bits}')
 	storage_length = 2**num_bits
-	bit_string_array = np.zeros(storage_length)
+	bit_string_array = np.zeros(storage_length, dtype=np.int8)
 
 	#Use a different number of hashes depensing if it is a BitString Array (1 hash)
 	#Or it is a Bloom filter application (k hashes)
@@ -86,7 +85,6 @@ def run_simulator(num_bits):
 	prob_collision = np.zeros(n_runs)
 	for r in range(n_runs):
 		num_collision = 0
-		number_words_checkcollision = 1000
 		for i in range(number_words_checkcollision):
 			#Generate 'fake' word hash(es). Fake because they are just rnd number between [0,n)
 			word_indexes = [generateWord(storage_length) for _ in range(num_hashes)]
@@ -108,8 +106,12 @@ def run_simulator(num_bits):
 	#pr(FP)=pr(for each k, bs_arr[k]=1)=(# 1s/# length)^k
 	theoretical_probability = (np.sum(bit_string_array)/storage_length)**num_hashes
 	ave, ci, rel_err = evaluate_conf_interval(prob_collision)
-	memory_occupacy = asizeof.asizeof(bit_string_array)
-	return num_bits, num_hashes, ave - ci, ave, ave + ci, rel_err, theoretical_probability, memory_occupacy
+	memory_occupacy = (asizeof.asizeof(bit_string_array))/1024**2
+	theoretical_mem_occ = ((number_words * num_bits)/8)/1024**2
+	if(bloom_filter==0):
+		return num_bits, ave - ci, ave, ave + ci, rel_err, theoretical_probability, memory_occupacy, theoretical_mem_occ
+	else:
+		return num_bits, num_hashes, ave - ci, ave, ave + ci, rel_err, theoretical_probability, memory_occupacy, theoretical_mem_occ
 	
 	# prob_false_pos = number_words / storage_length
 	# size_bitarray = asizeof.asizeof(bit_string_array)
@@ -128,9 +130,14 @@ print(f'Number of Words: {number_words}')
 initial_seed = 2500
 confidence_level = 0.95
 n_runs = 4
+bloom_filter = int(sys.argv[1])
+number_words_checkcollision = 1000
 
 datafile = open(f"bit_string_array{bloom_filter}.dat", "w")
-print("nbits\tnHashes\tciLow\tave\tciHigh\trel_err\ttheoreticalProb\tmemOccupacy",file=datafile)
+if(bloom_filter==0):
+	print("nbits\tciLow\tave\tciHigh\trel_err\tthProb\tmemOccup\tth_memOccup",file=datafile)
+else:
+	print("nbits\tnHashes\tciLow\tave\tciHigh\trel_err\tthProb\tmemOccup\tth_memOccup",file=datafile)
 #print("num_bits, ave - ci, ave, ave + ci, rel_err, theoretical_occupacy")
 # print("nbits\tprob_FalsePos\tsize\ttheoretical_size",file=datafile)
 
@@ -142,7 +149,7 @@ for num_bits in possible_num_bits:
 datafile.close() # close the file
 
 import os
-os.system(f'python PlotResultsBTA.py {bloom_filter}')
+os.system(f'python PlotResultsBSA.py {bloom_filter}')
 
 
 
