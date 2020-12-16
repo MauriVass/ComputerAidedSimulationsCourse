@@ -3,7 +3,9 @@ import math
 import numpy as np
 from pympler import asizeof
 from scipy.stats import t
+from bitarray import bitarray
 import sys 
+import os
 
 def generateWord(max_val):
 	return int(np.random.uniform(high=max_val))
@@ -34,17 +36,12 @@ def compute_all_hashes(md5, num_hashes, b):
 # all_bits_to_update=compute_all_hashes(word_hash_int, 32, 24) # compute 32 hash values on 24 bits
 # print(all_bits_to_update) # show the obtained hash values
 
-# exit(0)
-
 def evaluate_conf_interval(x):
 	t_sh = t.ppf((confidence_level + 1) / 2, df=n_runs - 1) # threshold for t_student
 
 	ave = x.mean() # average
 	stddev = x.std(ddof=1) # std dev
 	ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
-	# ave = x # average. This is the total number of collision divided by the total number of persons
-	# stddev = np.sqrt(x*(1-x)) # std dev
-	# ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
 
 	#print(ave, stddev, t_sh, runs, ci, ave)
 	rel_err = ci / ave if ave>0 else 0
@@ -54,11 +51,15 @@ def run_simulator(num_bits):
 	np.random.seed(initial_seed)
 	print(f'Num bits: {num_bits}')
 	storage_length = 2**num_bits
-	bit_string_array = np.zeros(storage_length, dtype=np.int8)
+
+	if(data_struc_type==2):
+		bit_string_array = np.zeros(storage_length, dtype=np.int8)
+	else:
+		bit_string_array = storage_length * bitarray('0')
 
 	#Use a different number of hashes depensing if it is a BitString Array (1 hash)
 	#Or it is a Bloom filter application (k hashes)
-	if(bloom_filter==0):
+	if(data_struc_type==0):
 		num_hashes = 1
 	else:
 		#Theoretical formula to calculate the number of hashes needed
@@ -76,12 +77,12 @@ def run_simulator(num_bits):
 		hashes = compute_all_hashes(word_hash_int,num_hashes,num_bits)
 		#print(hashes)
 		for h in hashes:
-			if(bit_string_array[h]==1): #Conflict
-				#num_collision+=1
-				_=0
+			if(data_struc_type==2):
+				bit_string_array[h]+=1
 			else:
-				bit_string_array[h]=1
-	
+				if(bit_string_array[h]==False):
+					bit_string_array[h]=True
+
 	prob_collision = np.zeros(n_runs)
 	for r in range(n_runs):
 		num_collision = 0
@@ -94,32 +95,45 @@ def run_simulator(num_bits):
 			#All bit_string_array[word_index] should be 1 for a collision -> 
 			#if just one is 0 it means that the fake word is not present
 			for word_index in word_indexes:
-				if(bit_string_array[word_index]==0): #Conflict
-					isPresent=False
-					break
+				if(data_struc_type==2):
+					if(bit_string_array[word_index]==0):
+						isPresent=False
+						break
+				else:
+					if(bit_string_array[word_index]==False):
+						isPresent=False
+						break
+			#print(word_index,bit_string_array[word_index],isPresent)
 			#If present is True it means the the fake word is present
 			if(isPresent):
 				num_collision+=1
 		prob = num_collision/number_words_checkcollision
 		prob_collision[r] = prob
-
-	#pr(FP)=pr(for each k, bs_arr[k]=1)=(# 1s/# length)^k
-	theoretical_probability = (np.sum(bit_string_array)/storage_length)**num_hashes
+	
 	ave, ci, rel_err = evaluate_conf_interval(prob_collision)
+	if(data_struc_type==2):
+		theoretical_probability = (np.sum(bit_string_array>0)/storage_length)**num_hashes
+		theoretical_mem_occ = ((number_words * num_bits)/8)/1024**2
+	else:
+		#pr(FP)=pr(for each k, bs_arr[k]=1)=(# 1s/# length)^k
+		theoretical_probability = (np.sum( bit_string_array.tolist() )/storage_length)**num_hashes
+		theoretical_mem_occ = ((number_words)/8)/1024**2
 	memory_occupacy = (asizeof.asizeof(bit_string_array))/1024**2
-	theoretical_mem_occ = ((number_words * num_bits)/8)/1024**2
-	if(bloom_filter==0):
+	if(data_struc_type==0):
 		return num_bits, ave - ci, ave, ave + ci, rel_err, theoretical_probability, memory_occupacy, theoretical_mem_occ
 	else:
 		return num_bits, num_hashes, ave - ci, ave, ave + ci, rel_err, theoretical_probability, memory_occupacy, theoretical_mem_occ
-	
-	# prob_false_pos = number_words / storage_length
-	# size_bitarray = asizeof.asizeof(bit_string_array)
-	# theoretical_size = (number_words * num_bits) / 8
-	# #prob_bloom_fil = (1-math.exp(-number_words*storage_length/))
-	# return num_bits, prob_false_pos, size_bitarray, theoretical_size
+
+# prob_false_pos = number_words / storage_length
+# size_bitarray = asizeof.asizeof(bit_string_array)
+# theoretical_size = (number_words * num_bits) / 8
+# #prob_bloom_fil = (1-math.exp(-number_words*storage_length/))
+# return num_bits, prob_false_pos, size_bitarray, theoretical_size
 
 #Store english vocabulary
+
+#if(os.path.exists('Temp')==False):
+#  !git clone https://github.com/MauriVass/Temp.git
 file = open('words_alpha.txt','r')
 words = []
 for f in file:
@@ -130,11 +144,12 @@ print(f'Number of Words: {number_words}')
 initial_seed = 2500
 confidence_level = 0.95
 n_runs = 4
-bloom_filter = int(sys.argv[1])
+#This can be [0,1,2]: 0:bit string array, 1:simple bloom filter, 2:counting bloom filter
+data_struc_type = int(sys.argv[1])
 number_words_checkcollision = 1000
 
-datafile = open(f"bit_string_array{bloom_filter}.dat", "w")
-if(bloom_filter==0):
+datafile = open(f"bit_string_array{data_struc_type}.dat", "w")
+if(data_struc_type==0):
 	print("nbits\tciLow\tave\tciHigh\trel_err\tthProb\tmemOccup\tth_memOccup",file=datafile)
 else:
 	print("nbits\tnHashes\tciLow\tave\tciHigh\trel_err\tthProb\tmemOccup\tth_memOccup",file=datafile)
@@ -149,10 +164,4 @@ for num_bits in possible_num_bits:
 datafile.close() # close the file
 
 import os
-os.system(f'python PlotResultsBSA.py {bloom_filter}')
-
-
-
-
-
-		
+os.system(f'python PlotResultsBSA.py {data_struc_type}')

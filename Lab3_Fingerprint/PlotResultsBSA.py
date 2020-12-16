@@ -7,15 +7,15 @@ import sys
 import seaborn as sns
 
 #Load
-bloom_filter = int(sys.argv[1])
-data = pd.read_csv(f'bit_string_array{bloom_filter}.dat',sep='\t')
+data_struc_type = int(sys.argv[1])
+data = pd.read_csv(f'bit_string_array{data_struc_type}.dat',sep='\t')
 
 number_words = 370103
 Ns = np.array(data['nbits'])
-y_theo = np.array(data['theoreticalProb'])
+y_theo = np.array(data['thProb'])
 # n = max(Ns)
 # x = np.arange(min(Ns),n+1)
-# if(bloom_filter==0):
+# if(data_struc_type==0):
 # 	y = number_words/(2**x)
 # else:
 # 	num_hashes = np.array(data['nHashes'])[0]
@@ -36,7 +36,7 @@ plt.fill_between(Ns, lb, ub, color='green', alpha=0.2, label=f'95% Confidence In
 #print(Ns)
 #print(means)
 
-if(bloom_filter == 0):
+if(data_struc_type == 0):
 	title = f'Bit String Array Probability False Positive'
 else:
 	title = f'Bloom Filter Probability False Positive'
