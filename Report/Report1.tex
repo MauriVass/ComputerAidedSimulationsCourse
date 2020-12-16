@@ -7,6 +7,8 @@
 \usepackage{subfig}
 \usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage{array}
+\usepackage{dcolumn} % automatically loads the 'array' package
 %\geometry{
 %	 a4paper,
 %	 total={170mm,257mm},
@@ -462,7 +464,7 @@ for each value of m.}
 			\includegraphics[scale=0.6]{Lab3/BloomFilterProbabilityFalsePositiveRuns5.png}
 			The theoretical value is calculated the same as bit string array (\ref{eq:3}):
 			\begin{equation}\label{eq:5}
-				prob(arr[H(w)]=1|H(w) \not\in arr) \: = \: \left( \frac{\#1s}{tota\_length} \right)^k_{opt}
+				prob(arr[H(w)]=1|H(w) \not\in arr) \: = \: \left( \frac{\#1s}{tota\_length} \right)^{k_{opt}}
 			\end{equation}
 			Where \emph{k} is the number of different values of hashes and is calculated as: 
 			\[
@@ -512,7 +514,7 @@ for each value of m.}
 				  \textbf{\begin{tabular}[c]{@{}c@{}}Min theoretical \\ memory (MB)\end{tabular}} &
 				  \textbf{\begin{tabular}[c]{@{}c@{}}Actual\\ memory (MB)\end{tabular}} \\ \hline
 				\multirow{6}{*}{\textbf{Bloom Filter}}
-																												& 19 & 1  & 0.49  & 0.83 & 0.50   \\ \cline{2-6} 
+																												& 19 & 1  & 0.49  & 0.83 & 0.50/8   \\ \cline{2-6} 
 				                                       & 20 & 1  & 0.27  & 0.88 & 1 .00  \\ \cline{2-6} 
 				                                       & 21 & 3  & 0.05  & 0.93 & 2.00  \\ \cline{2-6} 
 				                                       & 22 & 7  & 0.001 & 0.97 & 4.00  \\ \cline{2-6} 
@@ -523,16 +525,61 @@ for each value of m.}
 				\end{table}
 				
 				\subsection{Given 1 MB of available memory for the storage, what are the performance of the spell checker application using the word set, the fingerprint set, the bit string array and the bloom filter?}
+				Theoretically, given 1 MB of memory the performance using the different data structures are:
+				\begin{itemize}
+					\item Word set: the storage is not possible since we may only store, $\frac{1MB}{1.67MB}=0.047$, 4.7\% of the total words;
+					\item[] For the other structures we could only use a number of bits equal to $\frac{1024^2*8}{\#words}=22.66$ bits, so approximating this value, only 22 bits given 1MB of space.
+					\item Fingerprint set: the storage of the whole list of words is always possible but there is a change on the probability of fase positive depending on the number of bits used. Using 22 bits the probability of false positive would be $eps=\frac{\#words}{2^{22}}=0.0882$; 
+					\item Bit String Array: Using 22 bits the probability of false positive would be $eps=\frac{1}{22}=0.0454$;
+					\item Bloom filter: Using 22 bits the probability of false positive would be $eps=\frac{1}{2^{\frac{22}{1.44}}}=2.51 \times 10^{-5}$. 
+				\end{itemize}
 				
+
+\newcolumntype{d}[1]{D{.}{.}{#1}}
+\setlength{\extrarowheight}{5pt}
+%				\renewcommand{\arraystretch}{2}
+				\begin{table}[h!]
+				\centering
+					\resizebox{\textwidth}{!}{%
+						\begin{tabular}{|c|l|c|l|l|l|}
+						\hline
+						\textbf{\begin{tabular}[c]{@{}c@{}}Data\\ Structure\end{tabular}} &
+						  \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Total Storage\\ Formula (bit)\end{tabular}}} &
+						  \multirow{4}{*}{} &
+						  \textbf{\begin{tabular}[c]{@{}c@{}}Max\\ Num\\ bits\end{tabular}} &
+						  \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Epsilon\\ Formula\end{tabular}}} &
+						  \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Epsilon\\ Value\end{tabular}}} \\ \cline{1-2} \cline{4-6} 
+						\textbf{Fingerprint Table} & \multicolumn{1}{c|}{$m\times \log_2{ \frac{m}{eps} }$}     &  & \multirow{3}{*}{22}  & \multicolumn{1}{c|}{$\frac{m}{2^{22}}$}      									& \multicolumn{1}{c|}{0.0882}      																	\\ [5px]  \cline{1-2} \cline{5-6} 
+						\textbf{Bit String Array}  	 & \multicolumn{1}{c|}{$m \times \frac{1}{eps}$} 										   &  &                     							 & \multicolumn{1}{c|}{$\frac{1}{22}$}      														& \multicolumn{1}{c|}{0.0454}      																	\\ [5px] \cline{1-2} \cline{5-6} 
+						\textbf{Bloom Filter}      	 & \multicolumn{1}{c|}{$m \times 1.44\log_2{\frac{1}{eps}}$} 		&  &                     							 & \multicolumn{1}{c|}{$ \frac{1}{2^{\frac{22}{1.44}}} $} 		& \multicolumn{1}{c|}{$2.51 \times 10^{-5}$} 						\\ [5px] \hline 
+						\end{tabular}
+						}
+				\end{table}
+				Where \emph{m} is the number of words to be stored.
+%		\begin{table}[h!]
+%				\centering
+%					\resizebox{\textwidth}{!}{%
+%				\begin{tabular}{|c|c|c|}
+%				\hline
+%				\textbf{\begin{tabular}[c]{@{}c@{}}Data\\ Struncture\end{tabular}} &
+%				  \textbf{\begin{tabular}[c]{@{}c@{}}Total Storage\\ Formula (bit)\end{tabular}} &
+%				  \textbf{\begin{tabular}[c]{@{}c@{}}Epsilon\\ for 1MB\end{tabular}} \\ \hline
+%				\textbf{Fingerprint Table} & $m \times \log_2{ \frac{m}{eps} }$ & 0.0882 \\ \hline
+%				\textbf{Bit String Array}  & $m \times \frac{1}{eps}$  											& 0.0454 \\ \hline
+%				\textbf{Bloom Filter}      & $m \times 1.44\log_2{\frac{1}{eps}}$ & $2.51 \times 10^{-5}$ \\ \hline
+%				\end{tabular}
+%				}
+%		\end{table}
+
+
 				\subsection{(optional) For each value of the number of bits per fingerprint, show in a graph the probability of false positive in function of the number of hash functions, in the range 1 -> 32. Is the optimal value of the number of hash function obtained by simulation coherent with the theory?}
 				\includegraphics[scale=0.6]{Lab3/BloomFiltersProbabilityFalsePositive_0_6.png}
-				\begin{figure}%
-				    \centering
-				    \subfloat[\centering label 1]{{\includegraphics[scale=0.6]{Lab3/BloomFiltersProbabilityFalsePositive_0_3.png} }}%
-				    \qquad
-				    \subfloat[\centering label 2]{{\includegraphics[scale=0.6]{Lab3/BloomFiltersProbabilityFalsePositive_3_6.png} }}%
-				    \caption{2 Figures side by side}%
-				    \label{fig:example}%
-				\end{figure}
+				\begin{minipage}{0.45\textwidth}
+						\includegraphics[scale=0.45]{Lab3/BloomFiltersProbabilityFalsePositive_0_3.png}
+				\end{minipage}
+				\begin{minipage}{0.45\textwidth}
+						\includegraphics[scale=0.45]{Lab3/BloomFiltersProbabilityFalsePositive_3_6.png}
+				\end{minipage}
+				
 
 \end{document}
