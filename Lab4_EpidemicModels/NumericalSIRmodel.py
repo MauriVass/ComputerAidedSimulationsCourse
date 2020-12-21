@@ -1,10 +1,5 @@
 import numpy as np
-import scipy.stats as s
-import math
 import matplotlib.pyplot as plt
-import pandas as pd
-import sys
-import seaborn as sns
 
 #How many people there are in the population
 population = 10000
@@ -16,8 +11,8 @@ transmission_rate=0.2
 infection_period=14
 recovery_rate=1/infection_period
 
-print(transmission_rate)
-print(recovery_rate)
+print('Transmission Rate: ', transmission_rate)
+print('Recovery Rate: ', recovery_rate)
 
 initial_seed = 2500
 np.random.seed(initial_seed)
@@ -26,13 +21,13 @@ S = np.zeros(total_days) #Susceptible
 I = np.zeros(total_days) #Infected
 R = np.zeros(total_days) #Recovered
 
-#Initial conditions
+#Initial conditions (day 0)
 S[0] = population - 1
 I[0] = 1
 R[0] = 0
 
 end_epidemic = np.Inf
-#Skip the first day (Initial condition)
+#Skip the day 0
 for d in range(1,365):
 	###	Solving Differential equations	###
 	#The number of susceptible people tomorrow depends on today S and I values
@@ -68,5 +63,11 @@ plt.ylabel('Number People')
 
 #Expected number of people the first infected individual will infect (Beta/gamma)
 R0 = transmission_rate/recovery_rate
+print(f'R0 value: {R0}')
+
+#Max number of infections and the day when this happens
+day_max_infections = np.argmax(I)
+max_infections = int(I[day_max_infections])
+print(f'Max Infections: {max_infections}, day at which occurs: {day_max_infections}')
 
 plt.show()
