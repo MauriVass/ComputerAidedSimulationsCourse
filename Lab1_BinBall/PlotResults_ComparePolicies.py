@@ -29,7 +29,7 @@ for i,d in enumerate([1,2,4]):
 title = f'Comparison among Policies, Runs= {runs}'
 plt.title(title)
 
-plt.plot([], [], ' ', label="95% Confidence Interval")
+plt.plot([], [], ' ', color='gray', label="95% Confidence Interval")
 plt.legend(loc='upper left')
 plt.xscale("log")
 plt.xlabel('Bins/Balls')
