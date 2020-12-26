@@ -1,5 +1,6 @@
 \documentclass{report}
 \usepackage[utf8]{inputenc}
+\usepackage{titlesec}
 \usepackage{geometry}
 \usepackage{multirow}
 \usepackage{graphicx}
@@ -43,6 +44,11 @@
   tabsize=3
 }
 
+\newcounter{debug}
+\setcounter{debug}{1}
+
+\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
+
 \begin{document}
 
 \begin{titlepage}
@@ -69,14 +75,17 @@
 
 \tableofcontents
 
+% ### REPORT 1 ###
+\ifnum\value{debug}=1 {
+    
 \chapter{Bins \& Balls}
 	 
 	\section{Introduction}
 	 
-	This experiment involves a number \emph{N} of bins and balls: for each ball we choose random bins, one or more than one, depending on the dropping policy, and we put the ball in one of those bins. The goal is to evaluate the maximum occupancy of the bins and compare the result with the theoretical one. There are 2 dropping policy:
+	This experiment involves a number \emph{N} of bins and balls: for each ball we choose random bins, one or more than one, depending on the dropping policy, and we put the ball in one of those bins. The goal is to evaluate the maximum occupancy of the bins and compare the results with the theoretical ones. There are 2 dropping policy:
 	\begin{itemize}
 		\item Random Dropping: for each ball we choose a random bin and we put the ball in it; 
-		\item Random Load Balancing: for each ball we choose \emph{d} random bins and we fill the one with less(a lower(?)) occupancy. In this simulation the values of \emph{d} used are 2 and 4.
+		\item Random Load Balancing: for each ball we choose \emph{d} random bins and we fill the one with a lower occupancy. In this simulation the values of \emph{d} used are 2 and 4.
 	\end{itemize}
 
 	\section{Tasks}
@@ -85,7 +94,7 @@
 			The input parameters of the simulation are:
 			\begin{itemize}
 				\item Number N of bins and balls;
-				\item The seed value used to generate pseudo-random numbers;
+				\item The seed value used to initialize a pseudorandom number generator;
 				\item The confidence level used to calculate the confidence intervals;
 				\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results.
 			\end{itemize}
@@ -94,6 +103,8 @@
 			The output metrics of the simulation are:
 			\begin{itemize}
 				\item Number N of bins and balls;
+				\item The theoretical lower bound value;
+				\item The theoretical upper bound value;
 				\item The lower confidence interval value;
 				\item The average max occupancy value;
 				\item The upper confidence interval value;
@@ -113,9 +124,9 @@
 				\item One plots the relative errors for different values of the number of runs;
 			\end{itemize}
 			
-			\subsection{For the random dropping policy, show the coherence of the simulation results with the theoretical bounds, for N in [100; 10\^6]. Show the effect of varying the number of runs for each experiment on the relative error}
+			\subsection{For the random dropping policy, show the coherence of the simulation results with the theoretical bounds, for N in [100; $10^6$]. Show the effect of varying the number of runs for each experiment on the relative error}
 			
-			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns3.png}
+			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns3.png} \\
 			It is possible to see that 3 runs are not enough since the confidence interval is not inside the theoretical values.
 			The lower bound are calucaled using the formula:
 			
@@ -123,7 +134,7 @@
 				 \text{max occupacy = }\frac{\log n}{\log \log n} 
 			\end{equation}
 			\begin{center}
-					where \emph{n} is the number of persons.
+					where \emph{n} is the number of bins and balls.
 			\end{center}
 			While the upper bound is just 3 times this formula.
 			
@@ -136,7 +147,7 @@
 				 \text{max occupacy = }\frac{\log \log n}{\log d}
 			\end{equation}
 			\begin{center}
-					where \emph{n} is the number of persons and \emph{d} the number of random bins chosen.
+					where \emph{n} is the number of bins and balls and \emph{d} the number of random bins chosen.
 			\end{center}
 			It is possible to see that this formula is much smaller than formula \ref{eq:1}, so we expect a lower occupacy value.
 			
@@ -150,7 +161,7 @@
 			\includegraphics[scale=0.6]{Lab1/RelativeErrorsRandomDroppingPolicy.png}
 			It is possible to see that the relative errors decrease with increasing the number of runs. 
 			
-			\begin{equation} \label{eq:3}
+			\begin{equation}
 				 \text{rel\_error = }2\frac{\Delta}{x}
 			\end{equation}
 			\begin{center}
@@ -158,6 +169,12 @@
 			\end{center}
 			The same happens for the Loading Balancing policy; graphs are omitted.
 			
+} \fi		
+			
+			
+% ### REPORT 2 ###
+\ifnum\value{debug}=2 {
+
 \chapter{Birthday Paradox}
 	 
 	 \section{Introduction}
@@ -254,11 +271,14 @@ for each value of m.}
 							\end{tabular}
 				\end{table}
 			The number of runs are chosen such that the relative errors (\ref{eq:3}) were under $0.15$ but in case of $10^6$ days the relative error is a bit smaller than the others ($0.11$ vs $0.14$) since with $250$ runs the MAE value was greater than the CI value.
+
+} \fi
 			
 			
 			
-			
-			
+% ### REPORT 3 ###
+\ifnum\value{debug}=3 {
+
 \chapter{Laboratory \#3}
 	 \subsubsection{Introduction}
 				This experiment involves the usage of the english dictionary to check the performance of different data structures. 
@@ -581,5 +601,10 @@ for each value of m.}
 						\includegraphics[scale=0.45]{Lab3/BloomFiltersProbabilityFalsePositive_3_6.png}
 				\end{minipage}
 				
+} \fi
+
+% ### REPORT 4 ###
+\ifnum\value{debug}=4 {
+} \fi
 
 \end{document}
