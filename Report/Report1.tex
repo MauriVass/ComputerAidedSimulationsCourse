@@ -10,14 +10,14 @@
 \usepackage{hyperref}
 \usepackage{array}
 \usepackage{dcolumn} % automatically loads the 'array' package
-%\geometry{
-%	 a4paper,
-%	 total={170mm,257mm},
-%	 left=20mm,
-%	 right=20mm,
-%	 top=10mm,
-%	 bottom=10mm
-% }
+\geometry{
+	 a4paper,
+	 total={210mm,297mm},
+	 left=10mm,
+	 right=10mm,
+	 top=20mm,
+	 bottom=15mm
+ }
 
 %For code pasting
 \usepackage{listings}
@@ -48,6 +48,8 @@
 \setcounter{debug}{1}
 
 \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
+%Space before and after \chapter {}{before}{after}
+\titlespacing*{\chapter}{0pt}{-50pt}{10pt}
 
 \begin{document}
 
@@ -78,6 +80,7 @@
 % ### REPORT 1 ###
 \ifnum\value{debug}=1 {
     
+    
 \chapter{Bins \& Balls}
 	 
 	\section{Introduction}
@@ -95,7 +98,7 @@
 			\begin{itemize}
 				\item Number N of bins and balls;
 				\item The seed value used to initialize a pseudorandom number generator;
-				\item The confidence level used to calculate the confidence intervals;
+				\item The confidence level used to calculate the confidence interval;
 				\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results.
 			\end{itemize}
 			 
@@ -117,71 +120,69 @@
 			
 	\subsection{Describe the architecture of the simulator in terms of source files and output files}
 			The whole simulation runs inside a script where the simulator runs multiple times for multiple values of bins and balls. \\
-			At each iteration the output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of bins and balls used. This .dat file is then elaborated by a script in order to create the plots. There are 3 scripts for plotting:
+			The output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of bins and balls used. This .dat file is then elaborated by scripts in order to create some plots. There are 3 scripts for plotting:
 			\begin{itemize}
-				\item One takes care of plotting the results of the simulation to have a comparison with the theoretical occupancy values;
+				\item One plots the results of the simulation to have a comparison with the theoretical occupancy values;
 				\item One plots the different performances of the dropping policy;
-				\item One plots the relative errors for different values of the number of runs;
+				\item One plots the relative errors for different values of the number of runs.
 			\end{itemize}
 			
-			\subsection{For the random dropping policy, show the coherence of the simulation results with the theoretical bounds, for N in [100; $10^6$]. Show the effect of varying the number of runs for each experiment on the relative error}
+			\subsection{For the random dropping policy, show the coherence of the simulation results with the theoretical bounds, for N in [100; 10\textsuperscript{6}]. Show the effect of varying the number of runs for each experiment on the relative error}
 			
 			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns3.png} \\
 			It is possible to see that 3 runs are not enough since the confidence interval is not inside the theoretical values.
-			The lower bound are calucaled using the formula:
+			The lower bound is calucaled using the formula:
 			
 			\begin{equation} \label{eq:1}
-				 \text{max occupacy = }\frac{\log n}{\log \log n} 
+				 \text{max\_occupacy = }\frac{\log n}{\log \log n} 
 			\end{equation}
 			\begin{center}
 					where \emph{n} is the number of bins and balls.
 			\end{center}
 			While the upper bound is just 3 times this formula.
 			
-			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns5.png}
+			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns5.png} \\
 			It is possible to see that 5 runs are enough since the confidence interval is inside the theoretical values.
 			
-			\includegraphics[scale=0.6]{Lab1/RandomLoadBalancingd2Runs3.png}
+			\vspace{20px}
+			
+			\includegraphics[scale=0.6]{Lab1/RandomLoadBalancingd2Runs3.png} \\
 			Even with 3 runs the Load Balancing with \emph{d=2} is near to the theoretical value.
 			\begin{equation} \label{eq:2}
-				 \text{max occupacy = }\frac{\log \log n}{\log d}
+				 \text{max\_occupacy = }\frac{\log \log n}{\log d}
 			\end{equation}
 			\begin{center}
 					where \emph{n} is the number of bins and balls and \emph{d} the number of random bins chosen.
 			\end{center}
 			It is possible to see that this formula is much smaller than formula \ref{eq:1}, so we expect a lower occupacy value.
 			
-			\includegraphics[scale=0.6]{Lab1/RandomLoadBalancingd4Runs3.png}
+			\vspace{20px}
+			
+			\includegraphics[scale=0.6]{Lab1/RandomLoadBalancingd4Runs3.png} \\
 			Even with 3 runs the Load Balancing with \emph{d=4} is quite near to the theoretical value. 
 			It is possible to see that the average occupacy is lower with respect to the Load Balancing with \emph{d=2} (The 2 plots have the same y-axis scale).
 			
-			\includegraphics[scale=0.6]{Lab1/ComparisonamongPolicies,Runs=5.png}
-			With this graph it is possible can better see the differences between the different policies and in particular: the Balacing policy works better than the Random one and that increasing the number of bins selected the maximum occupacy decreases. \\ There must be a trade-off between the number of bins and the latency script execution time because with large values of \emph{d} the occupacy decreases but the execution time increases: in the extreme case with \emph{d=\#bins} we would put the ball in the least occupied bins (equal to execute \emph{np.argmin(bins)}) and have an aveage maximum occupacy of 1 (one ball in each bin)  but that would require some time, expecially for large number of bins.
+			\includegraphics[scale=0.6]{Lab1/ComparisonamongPolicies,Runs=5.png} \\
+			With this graph it is possible to see the differences between the policies and in particular: the Balacing policy works better than the Random one and that with an increasing number of bins selected the maximum occupancy decreases. \\ There must be a trade-off between the number of bins selected and the script execution time because with large values of \emph{d} the occupancy decreases but the execution time increases: in the extreme case with \emph{d=\#bins} we would put the ball in the least occupied bins (equal to execute \emph{np.argmin(bins)}) and have an average maximum occupancy of 1 (one ball in each bin)  but that would require some time, especially for large number of bins.
 			
-			\includegraphics[scale=0.6]{Lab1/RelativeErrorsRandomDroppingPolicy.png}
+			\includegraphics[scale=0.6]{Lab1/RelativeErrorsRandomDroppingPolicy.png} \\
 			It is possible to see that the relative errors decrease with increasing the number of runs. 
-			
-			\begin{equation}
+			\begin{equation}\label{eq:3}
 				 \text{rel\_error = }2\frac{\Delta}{x}
 			\end{equation}
 			\begin{center}
-					where $\Delta$ is the \emph{CI}.
+					where $\Delta$ is the \emph{CI} length.
 			\end{center}
-			The same happens for the Loading Balancing policy; graphs are omitted.
+			Similar results are obtained with the Loading Balancing policy; graphs are omitted.
+					
 			
-} \fi		
-			
-			
-% ### REPORT 2 ###
-\ifnum\value{debug}=2 {
-
 \chapter{Birthday Paradox}
 	 
 	 \section{Introduction}
 	 
-	This experiment involves a number \emph{m} people: for each person a random number, the birthday in the case of Birthday Paradox, is chosen among \emph{n} possible values, the 365 days in case of Birthday Paradox. The goal is to evaluate:
+	This experiment involves a number \emph{m} people: for each person a random number, the birthday in the case of Birthday Paradox, is chosen among \emph{n} possible values. The goal is to evaluate:
 	\begin{itemize}
-		\item The probability of conflict. A conflict is experieced two people have the same random number (same birthday);
+		\item The probability of conflict. A conflict is experienced two people have the same random number (same birthday);
 		\item The minimum number of people required for a conflict.
 	\end{itemize}
 
@@ -190,10 +191,10 @@
 		\subsection{Define all the input parameters of the simulator}
 			The input parameters of the simulation are:
 			\begin{itemize}
-				\item Number of possible ``days'': in this simulation, this value can be: [365, 100000, 1000000];
-				\item The seed value used to generate pseudo-random numbers;
-				\item The confidence level used to calculate the confidence intervals;
-				\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results.
+				\item Number of possible ``days'': in this simulation, this value can be: [365, $10^5$, $10^6$];
+				\item The seed value used to initialize a pseudorandom number generator;
+				\item The confidence level used to calculate the confidence interval;
+				\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results;
 				\item A flag depending if we want to calculate the conflict probability or the minimum number of people needed to experience a conflict.
 			\end{itemize}
 			 
@@ -204,25 +205,25 @@
 					\begin{itemize}
 							\item Number N of persons;
 							\item The lower confidence interval value;
-							\item The probability of conflict;
+							\item The average max occupancy value;
 							\item The upper confidence interval value;
 							\item The relative error.
 					\end{itemize}
 					\item Minimum number of people:
 					\begin{itemize}
 							\item The lower confidence interval value;
-							\item The average number of people to experience a conflict;
+							\item The average max occupancy value;
 							\item The upper confidence interval value;
 							\item The relative error;
-							\item The theoretica value.
+							\item The theoretical value.
 					\end{itemize}
 			\end{enumerate}
 			All these value are stored in a file and each field is tab separated.
 	
 	\subsection{Define the main data structures for the simulator}
-				The data structure used is a binary array where to store whether the element (day in the case of Birthday Paradox) at position \emph{i} is occupied or not (0 means free, 1 means occupied: in the case of Birthday Paradox, in that day there is already, at least, one person who was born in that day).// This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$). \\
+				The data structure used is a binary array to store whether the element (day in the case of Birthday Paradox) at position \emph{i} is occupied or not (0 means free, 1 means occupied: in the case of Birthday Paradox, in that day there is already, at least, one person who was born in that day). \\ This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$). \\
 				For the calculation of the probability there is a counter that keeps how many conflicts happened. This is used to calculate the probability as $prob(conf)=\frac{\#conflicts}{\#people}$ at each run. \\
-				For the minimun number of people there is a an array storing the minimun number of people for a conflict at each run.
+				%For the minimum number of people there is a an array storing the minimum number of people for a conflict at each run.
 			
 	\subsection{Describe the architecture of the simulator in terms of source files and output files}
 			The whole simulation runs inside a script where the simulator runs multiple times for multiple values of people or just one in the case of finding the minimum number of people for a conflict. \\
@@ -230,12 +231,12 @@
 		
 		\subsection{Show the graph comparing the conflict probability with respect to the theoretical value,
 for each value of m.}
-				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays365andRuns200.png}
-				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays100000andRuns250.png}
-				The results obtained with 200 runs were not satisfying so the number of runs is increased to 250.
-				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays1000000andRuns250.png}
+				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays365andRuns200.png} \\
+				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays100000andRuns250.png} \\
+				The results obtained with 200 runs were not satisfying so the number of runs is increased to 250. \\
+				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays1000000andRuns250.png} \\
 				Even with 180 runs the simulation is not very close to the theoretical result. \\
-				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays1000000andRuns600.png}
+				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays1000000andRuns600.png} \\
 				Better results can be obtained increasing a lot the number of runs but such a huge number of runs requires more time to be executed.
 				
 		\subsection{Is the theoretical formula for the conflict probability accurate?}
