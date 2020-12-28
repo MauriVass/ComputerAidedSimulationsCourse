@@ -23,23 +23,26 @@ if(isProb):
 	#Calculate lower and upper bounds using the theoretical formula
 	people_lower_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.05))) )#The lower bound is calculated with probability 0.05
 	people_upper_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.95))) )#The upper bound is calculated with probability 0.95
-	#Use a number of points increasing with the number of days
+	#Use a step increasing with the number of days (index_day in [0,1,2])
 	step = int((people_upper_bound - people_lower_bound) / 20 + 5*index_day)
 	number_persons = range(people_lower_bound,people_upper_bound,step)
 
-'''
-#Use a fixed step
-#Set different starting values and steps depending on the number of total days
-if(number_days == possible_days[0]):
-	number_persons = range(3,upper_bound,2)
-elif(number_days == possible_days[1]):
-	number_persons = range(100,upper_bound,20)
-elif(number_days == possible_days[2]):
-	number_persons = range(300,upper_bound,60)
-'''
+	#ALTERNATIVES
+	'''
+	#Use a fixed step
+	#Set different starting values and steps depending on the number of total days
+	if(index_day == 0):
+		number_persons = range(people_lower_bound,people_upper_bound,2)
+	elif(index_day == 1):
+		number_persons = range(people_lower_bound,people_upper_bound,20)
+	elif(index_day == 2):
+		number_persons = range(people_lower_bound,people_upper_bound,60)
+	'''
+else:
+	#Loop only once in the case of min # of person for a conflict
+	#In case of isProb = False we would not need the for loop(for p in number_persons: ...), just one iteration
+	number_persons = [0]
 
-#Use uniform distribution
-#number_persons = [ int(x*upper_bound) for x in sorted(np.random.uniform(0,1,size=40)) ]
 
 #Print Input Parameters
 print("*** INITIAL SETTINGS ***")
@@ -75,18 +78,20 @@ def evaluate_conf_interval(x):
 
 def run_simulator(pers): # run the birthday paradox model
 	random.seed(a=initial_seed) # reset initial seed
+	#Counter that counts if in a given run a conflict occured (confli_value++)
+	#This can be achieve with an array (confli_value=[]) and if a conflict occured at run r set confli_value[r]=True
+	#And then count the number of True values. Using a counter avoids using an array
 	confli_value = 0 
+
 	#This case is for the minimum value case
 	number_people_conf = np.full(runs, 0)
 	for r in range(runs): # for each run
 		# birthday[i] is:
-		#False: no person has a birtday on this day (yet),
-		#True: at least one person
+		#False: no person has a birthday on this day (yet),
+		#True: at least one person has birthday in day i
 		birthday = np.full(number_days, False)
 
-		#This variable is for the probability case
-		number_conflicts = 0
-		#This variable is for the minimun value case
+		#This variable is for the minimun # of people for a conflict case
 		conflict_number = -1
 
 		#The maximum number of iteration changes depending on the value of isProb
@@ -99,8 +104,8 @@ def run_simulator(pers): # run the birthday paradox model
 				break #Exit the for loop
 			birthday[d]=True #No conflict, set birthday[d] to True
 
-		if(conflict_number>0):#if this is > then 0 it means that a conflict accured
-			confli_value += 1 # store the number of conflicts. This then will be divided by the total number of persons. Used for isProb=True
+		if(conflict_number>0):#if this is > then 0 it means that a conflict occured
+			confli_value += 1 # store the number of conflicts. This then will be divided by the total number of runs. Used for isProb=True
 			number_people_conf[r] = conflict_number #Store the first time(minimun number) we experience a conflict. Used for isProb=False
 
 	if(isProb):
@@ -124,10 +129,7 @@ if(isProb):
 else:
 	print("ciLow\tave\tciHigh\tRelErr\tTheoreticValue",file=datafile)
 
-#Loop only once in the case of min # of person for a conflict
-#In case of isProb = False we would not need the for loop, just one iteration
-persons = number_persons if isProb else [0]
-for p in persons: # for each number of days and persons
+for p in number_persons: # for each number of days and persons
 	if(isProb):
 		print(f"Running with #persons {p}")
 	out_run=run_simulator(p) # get the output results of a run
