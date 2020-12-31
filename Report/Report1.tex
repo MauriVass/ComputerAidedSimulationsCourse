@@ -45,7 +45,7 @@
 }
 
 \newcounter{debug}
-\setcounter{debug}{1}
+\setcounter{debug}{3}
 
 \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
 %Space before and after \chapter {}{before}{after}
@@ -77,9 +77,8 @@
 
 \tableofcontents
 
-% ### REPORT 1 ###
-\ifnum\value{debug}=1 {
-    
+% ### REPORT 2 ###
+\ifnum\value{debug}=2 {
     
 \chapter{Bins \& Balls}
 	 
@@ -282,109 +281,120 @@ for each value of m.}
 
 \chapter{Laboratory \#3}
 	 \subsubsection{Introduction}
-				This experiment involves the usage of the english dictionary to check the performance of different data structures. 
+				This experiment involves the usage of the English dictionary to check the performance of different data structures when dealing with the membership problem, so answer the question: `'is an element already present?''. 
 	 
 	 \section{Fingerprinting}	 
 	 
 			 	\subsection{Let w be the number of words available in the file. What is w?}
-								The english word dictionary contains $370103$ words.
+								The English word dictionary contains $370103$ words.
 								
 			 	\subsection{By simulation, compute the minimum value of bits $b^{exp}$ such that no collisions are experienced when storing the whole list of English words in a fingerprint set}
-						The minimum number of bits necessary to store all the words in a data structure without conflicts is: $b^{exp} = 36$ bits.
+						The minimum number of bits necessary to store all the words in a data structure without conflicts is: $b^{exp} = 39$ bits.
 						
 				\subsection{Define all the input parameters of the simulator}
 					The input parameters of the simulation are:
 					\begin{itemize}
-						\item The file containing the english words;
-						\item An upper bound for the number of bits. This will be used in a Binary Search algorithm to find the minimum value of bits $b^{exp}$ such that no collisions are experienced.
+						\item The file containing the English words;
+						%\item An upper bound for the number of bits. This will be used in a Binary Search algorithm to find the minimum value of bits $b^{exp}$ such that no collisions are experienced.
 					\end{itemize}
 					 
 				\subsection{Define all the output metrics of the simulator}
 					The output metrics of the simulation are:
 					\begin{enumerate}
 							\item The value of $b^{exp}$;
-							\item The theoretica value of b: $b^{teo}$;
-							\item The storage  memory required for the data structures and the theoretical storage memory;
+							\item The theoretical value of b: $b^{teo}$;
+							\item The storage  memories required for the data structures and the theoretical storage memories;
 							\item The probability of false positive using a  $b^{exp}$ fingerprint set.
 					\end{enumerate}
-					All these value are stored in a file and each field is tab separated.
 			
 			\subsection{Define the main data structures for the simulator}
 						There are 2 main data structures used: 
 							\begin{itemize}
-								\item A python list where to store all the english words;
-								\item A python set where to store the fingerprint of each english word.
+								\item A python set where to store all the English words;
+								\item A python set where to store the fingerprint of each English word.
 								\end{itemize}
-						After storing all the words, to find the minimum value of bits $b^{exp}$ such that no collisions are experienced, for each one of these a fingerprint is calculated:
+						After storing all the words, to find the minimum value of bits $b^{exp}$ such that no collisions are experienced, for each one of the words, a fingerprint is calculated:
 						\begin{itemize}
 								\item[] Each word is encode using the UTF-8 character encoding, then the MD5 hash is calculated. This MD5 hash returns a 128 bits value but since it is required to have fingerprint length is $b^{exp}$ bits, the MD5 hash value is converted to integer and only the last  $b^{exp}$ bits are taken; this is done with the module operation: \[ fingerprint\_value = word\_hash\_int \: \% \: 2^{b^{exp}} \]
 						\end{itemize}
-						This operation is repeated one time for each candidate $b^{teo}$ value until the minimum value possible is found. In particular this search is performed using a Binary Search algorithm; to write is a bit more complex than other algorithms but it is faster: for example is faster than an alogorithm that checks all numbers between 1 and infinite and stops as soon it find a value of $b^{exp}$ such that any collision is found.
+						This operation is repeated for each word and candidate $b^{teo}$ value until the minimum value possible is found. In particular this search is performed using a Binary Search algorithm; to write is a bit more complex than other algorithms but it is faster: for example is faster than an algorithm that checks all numbers between 1 and infinite and stops as soon it find a value of $b^{exp}$ such that any collision is found.
 					
 			\subsection{Compute analytically the number of bit $b^{teo}$ necessary to get a probability $0.5$ of fingerprint collision when building the dictionary with a fingerprint set}
-					It is possible to analitically compute the minimum number of bits given a specified probability using the following formula:
+					It is possible to analytically compute the minimum number of bits given a specified probability\emph{p} using the following formula:
 					\[
-						b^{teo} \: = \: \log_2{ \left( \frac{num\_words^2}{2\times \ln\left({1-p}\right)} \right)}
+							b^{teo} \: = \: \log_2{ \left( - \frac{num\_words^2}{2\times \ln\left({1-p}\right)} \right)}
 					\]
+					
 			\subsection{How $b^{exp}$ and $b^{teo}$ are related?}
-					The theoretical value and the simulaed value are really close: 
+					The theoretical value and the simulated value are really close: 
 					\[
-							b^{exp} \: = \: 36; \; 	b^{teo} \: = \: 36 \: \text{(the decimal value is 35.52)}
+							b^{exp} \: = \: 39; \; 	b^{teo} \: = \: 37 \: \text{(the decimal value is 36.52), ratio = 39/37 = 1.07}
 					\]
 			
 			\subsection{Evaluate the theoretical minimum amount of memory necessary to store the whole dictionary in a $b^{exp}$-fingerprint set and in a word set}
-			The theoretical memory necessary to store all the words using a $b^{exp}$ fingerprint would be \[ theoretical\_size \: = \: \frac{(number\_words \times num\_bits)}{8} \: = \: 1.59 \text{MB}\], instead for the python list \[ theoretical\_size \: = \: number\_words \times 4.7 \: = \: 1.66 \text{MB}\] where $4.7$ is the average length words of the english dictionary (1 character=8bits).
+			The theoretical memory necessary, in MB, to store all the words using the two structures, fingerprint table and python list, would be:
+			\[ theoretical\_size\_fp\_table \: = \: num\_words \times \frac{b^{exp}}{8} \times \frac{1}{1024^2}\: = \: 1.72 \text{MB}\] 
+			\[ theoretical\_size\_python\_set \: = \: num\_words \times 4.7 \times \frac{1}{1024^2} \: = \: 1.66 \text{MB}\] 
+			where $4.7$ is the average length words of the English dictionary (1 character = 8 bits) (\href{http://norvig.com/mayzner.html}{reference}).
 						
 			\subsection{Measure the actual amount of memory necessary to store the whole dictionary in a $b^{exp}$ fingerprint set and in a word set in your python implementation}
 			To calculate the memory used by an object in python it is possible to use the \emph{asizeof(obj)} from the \emph{pympler} library. This returns the memory in bytes of a given object.
 			\begin{center}
-					Memory required to store the fingerprint table: 16.02 MB, for the array of words: 15.28 MB
+					Memory required to store the fingerprint table: 16.47 MB, for the set of words: 21.46 MB
 			\end{center}
 			
 			\subsection{Assume a spell checker application in which a given word is compared with the words in the dictionary. Compute the probability of false positive for the $b^{exp}$-fingerprint set}
-			There are different ways to calculate the probability of false positive, simulation is one of this. But in this case is not needed since it is possible to calculate the probability of false positive analitically, using the following formula:
+			There are different ways to calculate the probability of false positive, simulation is one of this. But in this case is not needed since it is possible to calculate the probability of false positive analytically, using the following formula:
 			\begin{center}
 					prob(false\_pos) = number\_words / $2^{b^{exp}}$
 			\end{center}
 			
 			\subsection{To summarize all the previous results.}
-			\begin{table}[h!]
-					\begin{tabular}{|l|c|c|c|c|}
-					\hline
-					\multicolumn{1}{|c|}{\textbf{Storage}} &
-					  \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Bits per \\ fingerprint\end{tabular}}} &
-					  \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Prob. \\ false positive\end{tabular}}} &
-					  \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Min theoretical \\ memory (MB)\end{tabular}}} &
-					  \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Actual\\ memory (MB)\end{tabular}}} \\ \hline
-					\textbf{Word set} &
-					  N.A. &
-					  0 &
-					  1.66 &
-					  15.28 \\ \hline
-					\textbf{Fingerprint set} &
-					  36 &
-					  $1.077 \times 10^{-5}$ &
-					  1.59 &
-					  16.02 \\ \hline
-					\end{tabular}
-			\end{table}
-			
+
+				\begin{table}[h!]
+				\renewcommand{\arraystretch}{1.35}
+				\centering
+						\begin{tabular}{|l|c|c|c|c|}
+						\hline
+						\multicolumn{1}{|c|}{\textbf{Storage}} &
+						  \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Bits per \\ fingerprint\end{tabular}}} &
+						  \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Prob. \\ false positive\end{tabular}}} &
+						  \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Min theoretical \\ memory (MB)\end{tabular}}} &
+						  \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Actual memory\\ (MB)\end{tabular}}} \\ \hline
+						\textbf{Word set} &
+						  N.A. &
+						  $ 1.591 \times 10^{-7}$ &
+						  1.66 &
+						  21.46 \\ \hline
+						\textbf{Fingerprint set} &
+						  39 &
+						  0* &
+						  1.72 &
+						  16.47 \\ \hline
+						\end{tabular}
+				\end{table}
+				It is possible to see that  the memory required for the python set is much more the memory required to store the fingerprint table, this difference is more evident if the elements to be stored are different in sizes, for example: to store audio files, the memory required for the python set would be very high instead the one for the fingerprint table would not change (as long as we keep the same value of number of bits). \\
+				The probabilities of false positive is calculated using $ 5 \times 10^{6}$ number of testing words (words not in the English dictionary) but the probability of false positive for the fingerprint table is still 0. \\
+				* This is because it is a rare event and would require even an higher number of test words but this would require more time and power so in this case it is better to calculate analytically with the following formula:
+				\begin{center}
+					prob(false\_pos) = number\_words / $2^{39} =  6.732 \times 10^{-7}$
+			\end{center}
+				
 			\newpage
-			
-			
+					
 			
 			\section{Bit String Array}	 
 	 
 				\subsection{Define all the input parameters of the simulator}
 					The input parameters of the simulation are:
 					\begin{itemize}
-						\item The file containing the english words;
-						\item The seed value used to generate pseudo-random numbers;
-						\item The confidence level used to calculate the confidence intervals;
-						\item The number of words are used to check the probability of false positive;
-						\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results.
+						\item The file containing the English words;
 						\item A list with the possible values of the number of bits: [19, 20, 21, 22, 23, 24];
-						\item A flag to indicate that we want to use Bit String Array, Bloom Filter or Counting Bloom Filter: 0->Bit String Array;
+						\item The number of words are used to check the probability of false positive;
+						\item A flag to indicate that we want to use Bit String Array, Bloom Filter or Counting Bloom Filter. (0:Bit String Array);
+						\item The seed value used to initialize a pseudorandom number generator;
+						\item The confidence level used to calculate the confidence interval;
+						\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate.
 					\end{itemize}
 					 
 				\subsection{Define all the output metrics of the simulator}
@@ -403,19 +413,21 @@ for each value of m.}
 			\subsection{Define the main data structures for the simulator}
 						There are 3 main data structures used: 
 							\begin{itemize}
-								\item A python list where to store all the english words;
-								\item A numpy array, as bit string array, of length $2^{\#bits}$;
-								\item A integer containing the hash of a given word;
+								\item A python list to store all the English words;
+								\item A bit string array,  from the \emph{bitarray} library, of length $2^{\#bits}$;
 								\item A numpy array, of length \#runs, where to store the probability of false positive at each run.
 							\end{itemize}
 					
 			\subsection{Show in a graph the probability of false positive in function of the number of bits per fingerprint.}
-			\includegraphics[scale=0.6]{Lab3/BitStringArrayProbabilityFalsePositiveRuns5.png}
-			The theoretical value is calculated as :
-			\begin{equation}\label{eq:4}
-				prob(arr[H(w)]=1|H(w) \not\in arr) \: = \: \frac{\#1s}{tota\_length} 
+			\includegraphics[scale=0.6]{Lab3/BitStringArrayProbabilityFalsePositiveRuns5.png} \\
+			The simulation is run with using 20000 `fake' words and even with such a lower number the simulated results are quite accurate. \\
+			The theoretical value is calculated as:
+				%prob(arr[H(w)]=1|H(w) \not\in arr) \: = \: \frac{\#1s}{total\_length} 
+			\begin{equation}\label{eq:1}
+						prob(false\_pos) \: = \: \frac{\#1s}{total\_length}
 			\end{equation}
-			Where arr is the bit string array, w is the word not in the english vocabulary, $H(\cdot)$ is the hash function and $tota\_length$ is the total size of the bit string array.
+			%Where arr is the bit string array, w is the word not in the english vocabulary, $H(\cdot)$ is the hash function and $tota\_length$ is the total size of the bit string array.
+			Where $\#1$ is the number of 1s in the bit string array and $total\_length$ is the total size of the bit string array.
 			
 			%\subsection{Measure the actual memory occupancy in function of the number of bits per fingerprint.}
 			%See next table..
@@ -423,7 +435,9 @@ for each value of m.}
 			%\newpage 
 			
 			\subsection{To summarize all the previous results, fill the following table and compare these results with the ones obtained in the table of Sec. 2.1.1}
+			\renewcommand{\arraystretch}{1.25}
 			\begin{table}[h!]
+			\centering
 					\begin{tabular}{|c|c|c|c|c|}
 					\hline
 					\textbf{Storage} &
@@ -435,62 +449,51 @@ for each value of m.}
 						\multicolumn{1}{|l|}{\textbf{Fingerprint set}}                                       & 36          & $1.077 \times 10^{-5}$ & 1.59 & 16.02  \\ \hline
 						\multicolumn{5}{|l|}{}                                                                                                           \\ \hline
 						\multirow{6}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Bit String\\ Array\end{tabular}}} 
-																																																											& 19 & 0.49        & 0.83 & 0.50   \\ \cline{2-5} 
-						                                                                                     & 20 & 0.27        & 0.88 & 1.00   \\ \cline{2-5} 
-						                                                                                     & 21 & 0.14        & 0.92 & 2.00  \\ \cline{2-5} 
-						                                                                                     & 22 & 0.07        & 0.97 & 4.00  \\ \cline{2-5} 
-						                                                                                     & 23 & 0.03        & 1.01 & 8.00  \\ \cline{2-5} 
-						                                                                                     & 24 & 0.01        & 1.05 & 16.00 \\ \hline
+																																																											& 19 & 0.506        & 0.044/0.066 & 0.062   \\ \cline{2-5} 
+						                                                                                     & 20 & 0.297        & 0.044/0.132 & 0.125   \\ \cline{2-5} 
+						                                                                                     & 21 & 0.162        & 0.265 & 0.25  \\ \cline{2-5} 
+						                                                                                     & 22 & 0.084        & 0.531 & 0.5  \\ \cline{2-5} 
+						                                                                                     & 23 & 0.043        & 1.062 & 1.0  \\ \cline{2-5} 
+						                                                                                     & 24 & 0.022        & 2.125 & 2.0 \\ \hline
 				\end{tabular}
 		\end{table}
+		The theoretical probability is calculated as the memory required to store the number of words using a 1 bit (possible values: True, False) so it does not depend on the number of bit used. Formula:
+		\[ theoretical\_memory \: = \: num\_words \times \frac{1}{8} \times \frac{1}{1024^2} \: = \: 0.044 \text{MB}\]
 		
+		
+		\newpage
 		
 					\section{Bloom Filters}	 
-	 
+	 				The Bloom Filter is just an extension of the Bit String Array so they share lot of code. 
 				\subsection{Define all the input parameters of the simulator}
 					The input parameters of the simulation are:
 					\begin{itemize}
-						\item The file containing the english words;
-						\item The seed value used to generate pseudo-random numbers;
-						\item The confidence level used to calculate the confidence intervals;
-						\item The number of words are used to check the probability of false positive;
-						\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results;
-						\item A list with the possible values of the number of bits: [19, 20, 21, 22, 23, 24];
-						\item A flag to indicate that we want to use Bit String Array, Bloom Filter or Counting Bloom Filter: 1->Bloom Filter.
+						\item The same as the bit string array;
+						\item A flag to indicate that we want to use Bit String Array, Bloom Filter or Counting Bloom Filter: (1:Bloom Filter);
 					\end{itemize}
 					 
 				\subsection{Define all the output metrics of the simulator}
 				The output metrics of the simulation are:
 				\begin{itemize}
-					\item Number of bits;
-					\item The lower confidence interval value;
-					\item The average probability of false positive;
-					\item The upper confidence interval value;
-					\item The relative error;
-					\item The theoretical probability of false positive;
-					\item The memory occupancy of the bit string array;
+					\item The same as the bit string array;
+					\item The number of hashes used.
 				\end{itemize}
-				All these value are stored in a file and each field is tab separated.
 			
 			\subsection{Define the main data structures for the simulator}
-						There are 3 main data structures used: 
-							\begin{itemize}
-								\item A python list where to store all the english words;
-								\item A numpy array, as bloom filter, of length $2^{\#bits}$;
-								\item A list that contains all the hashes given a word;
-								\item A numpy array, of length \#runs, where to store the probability of false positive at each run.
-							\end{itemize}
+						The same as the Bit String Array.
 					
 			\subsection{Compare in a graph the measured probability of false positive and the theoretical one}
-			\includegraphics[scale=0.6]{Lab3/BloomFilterProbabilityFalsePositiveRuns5.png}
-			The theoretical value is calculated the same as bit string array (\ref{eq:3}):
-			\begin{equation}\label{eq:5}
-				prob(arr[H(w)]=1|H(w) \not\in arr) \: = \: \left( \frac{\#1s}{tota\_length} \right)^{k_{opt}}
+			\includegraphics[scale=0.6]{Lab3/BloomFilterProbabilityFalsePositiveRuns5.png} \\
+			The simulation is run with using 10000 `fake' words and even with such a lower number the simulated results are quite accurate. \\
+			The theoretical value is calculated the a similar formula as the bit string array (\ref{eq:1}):
+			\begin{equation} \label{eq:2}
+				prob(false\_pos) \: = \: \left( \frac{\#1s}{total\_length} \right)^{k_{opt}}
 			\end{equation}
 			Where \emph{k} is the number of different values of hashes and is calculated as: 
-			\[
+			
+			\begin{equation} \label{eq:3}
 					k_{opt} = \frac {2^{\#bits}}{number\_words} \times \ln(2)
-			\]
+			\end{equation}
 			Given this value, one should check both upper and lower integer( ceil() and floor() ) and pick the best one but usually truncate to the near integer works fine.
 			
 			%\subsection{Measure the actual memory occupancy in function of the number of bits per fingerprint.}
@@ -499,33 +502,34 @@ for each value of m.}
 			\newpage 
 			
 			\subsection{To summarize all the previous results, fill the following table and compare these results with the ones obtained in the table of Sec. 2.1.1 and Sec. 2.2.1.}
-			\begin{table}[h!]
-				\resizebox{\textwidth}{!}{%
-					\begin{tabular}{|c|c|c|c|c|}
-					\hline
-					\textbf{Storage} &
-					  \textbf{\begin{tabular}[c]{@{}c@{}}Bits per \\ fingerprint\end{tabular}} &
-					  \textbf{\begin{tabular}[c]{@{}c@{}}Prob. \\ false positive\end{tabular}} &
-					  \textbf{\begin{tabular}[c]{@{}c@{}}Min theoretical \\ memory (MB)\end{tabular}} &
-					  \textbf{\begin{tabular}[c]{@{}c@{}}Actual\\ memory (MB)\end{tabular}} \\ \hline
-						\multicolumn{1}{|l|}{\textbf{Word set}}                                              & N.A.        & 0           & 1.66 & 15.28  \\ \hline
-						\multicolumn{1}{|l|}{\textbf{Fingerprint set}}                                       & 36          & $1.077 \times 10^{-5}$ & 1.59 & 16.02  \\ \hline
-						\multicolumn{5}{|l|}{}                                                                                                           \\ \hline
-						\multirow{6}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Bit String\\ Array\end{tabular}}} 
-																																																											& 19 & 0.49        & 0.83 & 0.50   \\ \cline{2-5} 
-						                                                                                     & 20 & 0.27        & 0.88 & 1.00   \\ \cline{2-5} 
-						                                                                                     & 21 & 0.14        & 0.92 & 2.00  \\ \cline{2-5} 
-						                                                                                     & 22 & 0.07        & 0.97 & 4.00  \\ \cline{2-5} 
-						                                                                                     & 23 & 0.03        & 1.01 & 8.00  \\ \cline{2-5} 
-						                                                                                     & 24 & 0.01        & 1.05 & 16.00 \\ \hline
-				\end{tabular}
-				}
-		\end{table}
+%			\begin{table}[h!]
+%				\resizebox{\textwidth}{!}{%
+%					\begin{tabular}{|c|c|c|c|c|}
+%					\hline
+%					\textbf{Storage} &
+%					  \textbf{\begin{tabular}[c]{@{}c@{}}Bits per \\ fingerprint\end{tabular}} &
+%					  \textbf{\begin{tabular}[c]{@{}c@{}}Prob. \\ false positive\end{tabular}} &
+%					  \textbf{\begin{tabular}[c]{@{}c@{}}Min theoretical \\ memory (MB)\end{tabular}} &
+%					  \textbf{\begin{tabular}[c]{@{}c@{}}Actual\\ memory (MB)\end{tabular}} \\ \hline
+%						\multicolumn{1}{|l|}{\textbf{Word set}}                                              & N.A.        & 0           & 1.66 & 15.28  \\ \hline
+%						\multicolumn{1}{|l|}{\textbf{Fingerprint set}}                                       & 36          & $1.077 \times 10^{-5}$ & 1.59 & 16.02  \\ \hline
+%						\multicolumn{5}{|l|}{}                                                                                                           \\ \hline
+%						\multirow{6}{*}{\textbf{\begin{tabular}[c]{@{}c@{}}Bit String\\ Array\end{tabular}}} 
+%																																																											& 19 & 0.49        & 0.83 & 0.50   \\ \cline{2-5} 
+%						                                                                                     & 20 & 0.27        & 0.88 & 1.00   \\ \cline{2-5} 
+%						                                                                                     & 21 & 0.14        & 0.92 & 2.00  \\ \cline{2-5} 
+%						                                                                                     & 22 & 0.07        & 0.97 & 4.00  \\ \cline{2-5} 
+%						                                                                                     & 23 & 0.03        & 1.01 & 8.00  \\ \cline{2-5} 
+%						                                                                                     & 24 & 0.01        & 1.05 & 16.00 \\ \hline
+%				\end{tabular}
+%				}
+%		\end{table}
 		
-		\vspace{-0.7cm}
+		%\vspace{-0.7cm}
 		
+		\renewcommand{\arraystretch}{1.25}
 		\begin{table}[h!]
-				\resizebox{\textwidth}{!}{%
+		\centering
 				\begin{tabular}{|c|c|c|c|c|c|}
 				\hline
 				\textbf{Storage} &
@@ -536,39 +540,37 @@ for each value of m.}
 				  \textbf{\begin{tabular}[c]{@{}c@{}}Actual\\ memory (MB)\end{tabular}} \\ \hline
 				\multirow{6}{*}{\textbf{Bloom Filter}}
 																												& 19 & 1  & 0.49  & 0.83 & 0.50/8   \\ \cline{2-6} 
-				                                       & 20 & 1  & 0.27  & 0.88 & 1 .00  \\ \cline{2-6} 
-				                                       & 21 & 3  & 0.05  & 0.93 & 2.00  \\ \cline{2-6} 
-				                                       & 22 & 7  & 0.001 & 0.97 & 4.00  \\ \cline{2-6} 
-				                                       & 23 & 15 & 0     & 1.01 & 8.00  \\ \cline{2-6} 
+				                                       & 20 & 2  & 0.27  & 0.88 & 1 .00  \\ \cline{2-6} 
+				                                       & 21 & 4  & 0.05  & 0.93 & 2.00  \\ \cline{2-6} 
+				                                       & 22 & 6  & 0.001 & 0.97 & 4.00  \\ \cline{2-6} 
+				                                       & 23 & 16 & 0     & 1.01 & 8.00  \\ \cline{2-6} 
 				                                       & 24 & 31 & 0     & 1.06 & 16.00 \\ \hline
 				\end{tabular}
-				}
+				
 				\end{table}
 				
 				\subsection{Given 1 MB of available memory for the storage, what are the performance of the spell checker application using the word set, the fingerprint set, the bit string array and the bloom filter?}
 				Theoretically, given 1 MB of memory the performance using the different data structures are:
 				\begin{itemize}
-					\item Word set: the storage is not possible since we may only store, $\frac{1MB}{1.67MB}=0.047$, 4.7\% of the total words;
+					\item Word set: the storage is not possible since we may only store, $\frac{1MB}{1.66MB}=0.047$, 4.7\% of the total words;
 					\item[] For the other structures we could only use a number of bits equal to $\frac{1024^2*8}{\#words}=22.66$ bits, so approximating this value, only 22 bits given 1MB of space.
-					\item Fingerprint set: the storage of the whole list of words is always possible but there is a change on the probability of fase positive depending on the number of bits used. Using 22 bits the probability of false positive would be $eps=\frac{\#words}{2^{22}}=0.0882$; 
+					\item Fingerprint set: the storage of the whole list of words is always possible but there is a change on the probability of false positive depending on the number of bits used. Using 22 bits the probability of false positive would be $eps=\frac{\#words}{2^{22}}=0.0882$; 
 					\item Bit String Array: Using 22 bits the probability of false positive would be $eps=\frac{1}{22}=0.0454$;
 					\item Bloom filter: Using 22 bits the probability of false positive would be $eps=\frac{1}{2^{\frac{22}{1.44}}}=2.51 \times 10^{-5}$. 
 				\end{itemize}
 				
 
-\newcolumntype{d}[1]{D{.}{.}{#1}}
-\setlength{\extrarowheight}{5pt}
-%				\renewcommand{\arraystretch}{2}
+			\renewcommand{\arraystretch}{1.35}
 				\begin{table}[h!]
 				\centering
-					\resizebox{\textwidth}{!}{%
+					\resizebox{0.8\textwidth}{!}{%
 						\begin{tabular}{|c|l|c|l|l|l|}
 						\hline
 						\textbf{\begin{tabular}[c]{@{}c@{}}Data\\ Structure\end{tabular}} &
 						  \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Total Storage\\ Formula (bit)\end{tabular}}} &
 						  \multirow{4}{*}{} &
 						  \textbf{\begin{tabular}[c]{@{}c@{}}Max\\ Num\\ bits\end{tabular}} &
-						  \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Epsilon\\ Formula\end{tabular}}} &
+						  \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Formula solved \\ for Epsilon\end{tabular}}} &
 						  \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Epsilon\\ Value\end{tabular}}} \\ \cline{1-2} \cline{4-6} 
 						\textbf{Fingerprint Table} & \multicolumn{1}{c|}{$m\times \log_2{ \frac{m}{eps} }$}     &  & \multirow{3}{*}{22}  & \multicolumn{1}{c|}{$\frac{m}{2^{22}}$}      									& \multicolumn{1}{c|}{0.0882}      																	\\ [5px]  \cline{1-2} \cline{5-6} 
 						\textbf{Bit String Array}  	 & \multicolumn{1}{c|}{$m \times \frac{1}{eps}$} 										   &  &                     							 & \multicolumn{1}{c|}{$\frac{1}{22}$}      														& \multicolumn{1}{c|}{0.0454}      																	\\ [5px] \cline{1-2} \cline{5-6} 
@@ -593,19 +595,30 @@ for each value of m.}
 %		\end{table}
 
 
-				\subsection{(optional) For each value of the number of bits per fingerprint, show in a graph the probability of false positive in function of the number of hash functions, in the range 1 -> 32. Is the optimal value of the number of hash function obtained by simulation coherent with the theory?}
-				\includegraphics[scale=0.6]{Lab3/BloomFiltersProbabilityFalsePositive_0_6.png}
-				\begin{minipage}{0.45\textwidth}
-						\includegraphics[scale=0.45]{Lab3/BloomFiltersProbabilityFalsePositive_0_3.png}
-				\end{minipage}
-				\begin{minipage}{0.45\textwidth}
-						\includegraphics[scale=0.45]{Lab3/BloomFiltersProbabilityFalsePositive_3_6.png}
-				\end{minipage}
+				\subsection{(optional) For each value of the number of bits per fingerprint, show in a graph the probability of false positive in function of the number of hash functions, in the range 1 - 32. Is the optimal value of the number of hash function obtained by simulation coherent with the theory?}
+				\includegraphics[scale=0.6]{Lab3/BloomFiltersProbabilityFalsePositive_0_6.png} \\
+				It is possible to see that the theoretical
+%				\begin{minipage}{0.4\textwidth}
+%						\includegraphics[scale=0.45]{Lab3/BloomFiltersProbabilityFalsePositive_0_3.png}
+%				\end{minipage}
+%				\begin{minipage}{0.4\textwidth}
+%						\includegraphics[scale=0.4]{Lab3/BloomFiltersProbabilityFalsePositive_3_6.png}
+%				\end{minipage}
+				
+				\subsection{(optional) It can be shown that the number of distinct elements stored in a bloom filter
+with n bits and k hash functions can be estimated in function of N1, the actual number of bits equal to 1 in the bloom filter. Show how accurate is the formula when inserting word-by-word the dictionary, in function of the inserted words.}
+				\includegraphics[scale=0.6]{Lab3/ComparisonTheoryvsSimulationnumberdistinctWords_11.png} \\
+				Given the theoretical formula: 
+				\[ theo\_dist\_words = - \frac{n}{k} \ln \left( 1 - \frac{N_1}{n} \right) \]
+				\begin{center}
+				Where: n is the bloom filter storage length , k is the optimal number of hash functions given a number of bit  (\ref{eq:3}) and $N\_1$ is the actual number of 1s in the bloom filter. 
+				\end{center}
+				It is possible to see that the simulation is quite accurate wrt the theoretical formula. This is shown using the relative errors ($ rel\_err=\frac{|theo\_dist\_words-dist\_words|}{dist\_words} $) and these relative errors are low (the axis scale is quite low) so the theoretical formula is accurate.
 				
 } \fi
 
-% ### REPORT 4 ###
-\ifnum\value{debug}=4 {
+% ### REPORT 3 ###
+\ifnum\value{debug}=3 {
 } \fi
 
 \end{document}
