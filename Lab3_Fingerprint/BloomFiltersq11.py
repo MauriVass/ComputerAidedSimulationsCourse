@@ -8,9 +8,6 @@ from bitarray import bitarray
 import sys 
 import os
 
-def generateWord(max_val):
-	return int(np.random.uniform(high=max_val))
-
 def compute_all_hashes(md5, num_hashes, b):
 	# returns the list of num_hashes indexes corresponding to all the bits to update in a bloom filter
 	# md5 is the hash integer value obtained by md5, on 128 bits
@@ -31,23 +28,6 @@ def compute_all_hashes(md5, num_hashes, b):
 		md5 = md5 // (2 ** 3) # right-shift the md5 by 3 bits
 	return bits_to_update
 
-# compute the hash
-# word_hash = hashlib.md5('ciao'.encode('utf-8')) # example for ’ciao’
-# word_hash_int = int(word_hash.hexdigest(), 16) # compute the hash
-# all_bits_to_update=compute_all_hashes(word_hash_int, 32, 24) # compute 32 hash values on 24 bits
-# print(all_bits_to_update) # show the obtained hash values
-
-def evaluate_conf_interval(x):
-	t_sh = t.ppf((confidence_level + 1) / 2, df=n_runs - 1) # threshold for t_student
-
-	ave = x.mean() # average
-	stddev = x.std(ddof=1) # std dev
-	ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
-
-	#print(ave, stddev, t_sh, runs, ci, ave)
-	rel_err = ci / ave if ave>0 else 0
-	return ave, ci, rel_err
-
 def run_simulator(num_bits):
 	np.random.seed(initial_seed)
 	print(f'Num bits: {num_bits}')
@@ -66,12 +46,14 @@ def run_simulator(num_bits):
 		#Theoretical formula to calculate the number of hashes needed
 		#You should check both upper and lower integer( ceil() and floor() ) and pick the best one
 		#But usually truncate to the near integer works fine
-		num_hashes = int((storage_length/number_words)*math.log(2))
+		num_hashes = round((storage_length/number_words)*math.log(2))
 		num_hashes = num_hashes if num_hashes > 0 else 1
 
 	x = []
 	y = []
 	y_th = []
+	rel_errs = []
+	ratios = []
 	distinct_words=0
 	for i,w in enumerate(words):
 		#Calculate Hash
@@ -90,22 +72,18 @@ def run_simulator(num_bits):
 		if (already_present==False):
 			distinct_words+=1
 		if(i%frequency==0 and i>start):
-			bits_equal1=np.sum(bit_string_array.tolist())
+			bits_equal1 = np.sum(bit_string_array.tolist())
 			th_value = - (storage_length/num_hashes)*math.log(1-bits_equal1/storage_length)
+			rel_err = np.abs(i-th_value)/i
+			#ratio = 
+			# print(i,bits_equal1,th_value,rel_err)
 			x.append(i)
 			y.append(distinct_words)
 			y_th.append(th_value)
-	return x, y, y_th
-# prob_false_pos = number_words / storage_length
-# size_bitarray = asizeof.asizeof(bit_string_array)
-# theoretical_size = (number_words * num_bits) / 8
-# #prob_bloom_fil = (1-math.exp(-number_words*storage_length/))
-# return num_bits, prob_false_pos, size_bitarray, theoretical_size
+			rel_errs.append(rel_err)
+	return x, y, y_th, rel_errs
 
 #Store english vocabulary
-
-#if(os.path.exists('Temp')==False):
-#  !git clone https://github.com/MauriVass/Temp.git
 file = open('words_alpha.txt','r')
 words = []
 for f in file:
@@ -116,40 +94,36 @@ print(f'Number of Words: {number_words}')
 initial_seed = 2500
 confidence_level = 0.95
 #This can be [0,1,2]: 0:bit string array, 1:simple bloom filter, 2:counting bloom filter
-data_struc_type = int(sys.argv[1])
-frequency=40000
-start = 70000
-	# datafile = open(f"bit_string_array{data_struc_type}.dat", "w")
-	# if(data_struc_type==0):
-	# 	print("nbits\tciLow\tave\tciHigh\trel_err\tthProb\tmemOccup\tth_memOccup",file=datafile)
-	# else:
-	# 	print("nbits\tnHashes\tciLow\tave\tciHigh\trel_err\tthProb\tmemOccup\tth_memOccup",file=datafile)
-#print("num_bits, ave - ci, ave, ave + ci, rel_err, theoretical_occupacy")
-# print("nbits\tprob_FalsePos\tsize\ttheoretical_size",file=datafile)
+data_struc_type = 1
+frequency=35000
+start = 5000
 
 possible_num_bits = range(19,24)
 plt.figure(figsize=(12, 6), dpi=80)
-for num_bits in possible_num_bits:
-	x,y,y_th=run_simulator(num_bits) # get the output results of a run
-	#print(*out_run,sep="\t", file=datafile) # write on a file
-	#print(*out_run,sep="\t")
-	#print(x,y,y_th)
-	plt.plot(x,y_th, marker="x")
-	#Simulation
-	plt.plot(x,y, marker="o", label=num_bits)
+colors = [(1,0,0),(0,1,0),(0,0,1),(1,0.5,0),(1,0,1),(0,1,1)]
+init = 0
+end = init + 1
+for i,num_bits in enumerate(possible_num_bits):
+	x,y,y_th,rel_errs=run_simulator(num_bits) # get the output results of a run
 
-plt.plot([],[], marker="x", label='Theoretical')
-plt.plot(x,x, c='blue' label='Stright line (m=1)')
-title = f'Optional11'
+	# plt.plot(x,y_th,c=colors[i], marker="x", label=f'Theoretical {num_bits}')
+	# plt.plot(x,y,c=colors[i], marker="o", label=num_bits)
+	plt.plot(x,rel_errs, marker="o", label=f'#Bits: {num_bits}')
+
+# plt.plot([],[], marker="x", label='Theoreticals')
+# plt.plot(x,x, c='blue', label='Stright line (m=1)')
+title = f'Comparison Theory vs Simulation number distinct Words'
 plt.title(title)
 
-plt.legend(loc='upper left')
+plt.legend(loc='best')
 # plt.xscale("log")
 # plt.yscale("log")
-plt.xlabel('Number of Words added')
-plt.ylabel('Number of distinct Words')
+plt.xlabel('Number distinct Words added')
+# plt.ylabel('Number of distinct Words')
+plt.ylabel('Relative Errors')
 
-save_title = (f'Images/{title}top')
+t = title.replace(' ','')
+save_title = (f'Images/{t}_11')
 plt.savefig(save_title)
 
 plt.show()
