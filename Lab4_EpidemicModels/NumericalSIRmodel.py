@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-#How many people there are in the population
-population = 10000
+#How many people there are in the population_size
+population_size = 10000
 #Number of days we will consider
 total_days = 365
 #The number of people per day an infected person infects someone susceptible (beta) [day^-1]
@@ -22,7 +22,7 @@ I = np.zeros(total_days) #Infected
 R = np.zeros(total_days) #Recovered
 
 #Initial conditions (day 0)
-S[0] = population - 1
+S[0] = population_size - 1
 I[0] = 1
 R[0] = 0
 
@@ -31,7 +31,7 @@ end_epidemic = np.Inf
 for d in range(1,365):
 	###	Solving Differential equations	###
 	#The number of susceptible people tomorrow depends on today S and I values
-	susceptible_today_value = (transmission_rate/population)*S[d-1]*I[d-1]
+	susceptible_today_value = (transmission_rate/population_size)*S[d-1]*I[d-1]
 	infected_today_value = recovery_rate * I[d-1]
 	# '1' is the delta time: 1 day in this case
 	S[d] = S[d-1] - 1 * susceptible_today_value
