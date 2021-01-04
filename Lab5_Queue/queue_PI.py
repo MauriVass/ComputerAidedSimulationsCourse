@@ -1,29 +1,19 @@
 
 import numpy as np
 import simpy
-import time as t
+from scipy.stats import t
 
-# ******************************************************************************
-# Constants
-# ******************************************************************************
-number_services = 1
-LOAD = 0.85  # load of the queue
-SERVICE = 10 # av service time
-services = np.random.uniform(low=SERVICE, high=SERVICE, size=number_services)
-free_services = np.zeros(number_services, dtype=np.int8)
+def evaluate_conf_interval(x):
+	t_sh = t.ppf((confidence_level + 1) / 2, df=n_runs - 1) # threshold for t_student
 
-ARRIVAL = SERVICE/LOAD # av. inter-arrival time
-TYPE1 = 1 # At the beginning all clients are of the same type, TYPE1
+	ave = x.mean() # average
+	stddev = x.std(ddof=1) # std dev
+	ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
 
-LAMBDA = 1/ARRIVAL
-MU = 1/SERVICE
+	#print(ave, stddev, t_sh, runs, ci, ave)
+	rel_err = ci / ave if ave>0 else 0
+	return ave, ci, rel_err
 
-SIM_TIME = 500000 # condition to stop the simulation
-
-exp_arrival_time = True
-line_capacity = 42 #10000 * ARRIVAL
-
-print(number_services,services,np.mean(services),ARRIVAL)
 # ******************************************************************************
 # To take the measurements
 #
@@ -55,12 +45,18 @@ class Client:
 		self.type = type
 		self.arrival_time = arrival_time
 
+class Server:
+	def __init__(self,service_time):
+		self.service_time = service_time
+		self.busy = 0
+		self.utilization = 0
+		self.customers = 0
 
 def GetServiceTime(service):
 	if(exp_arrival_time):
 		service_time = np.random.exponential(service, size=1)
 	else:
-		service_time = 1/MU #random.uniform(a=0,b=1/MU)
+		service_time = service #random.uniform(a=0,b=1/MU)
 	return service_time
 
 
@@ -100,15 +96,15 @@ def arrival_process(environment,queue):
 
 		if(users <= number_services):
 			#Get the first free service
-			index_services = np.where(free_services==0)[0]
-			# print(free_services,index_services,index_services.size)
+			free_servers = [x for x in servers if x.busy==0]
+			# print(free_servers)
 			# t.sleep(1)
 			#Check if at least one server is free
-			if(index_services.size>0):
-				index_service = free_services[0]
+			if(len(free_servers)>0):
+				server = free_servers[0] #index_services[something]
 				#Set the server as busy
-				free_services[index_service] = 1
-				env.process(departure_process(env,index_service,queue))
+				server.busy = 1
+				env.process(departure_process(env,server,queue))
 
 		# yield to the next arrival
 		yield environment.timeout(inter_arrival)
@@ -127,13 +123,14 @@ def arrival_process(environment,queue):
 # - the queue of the clients
 # ******************************************************************************
 # ******************************************************************************
-def departure_process(environment,index_service, queue):
+def departure_process(environment,server, queue):
 	global users
 	global line_users
 
 	line_users -= 1
-	service = services[index_service]
+	service = server.service_time
 	service_time = GetServiceTime(service)
+	server.utilization += service_time
 	# yield to the end of service
 	yield environment.timeout(service_time)
 	# the execution flow will resume here
@@ -141,7 +138,8 @@ def departure_process(environment,index_service, queue):
 	# after a simulated time equal to service_time
 
 	# get the first element from the queue
-	client=queue.pop()
+	# client=queue.pop() #(pop?)
+	client = queue.pop(0)
 
 	# cumulate statistics
 	data.dep += 1
@@ -151,93 +149,165 @@ def departure_process(environment,index_service, queue):
 
 	# update the state variable, by decreasing the no. of clients by 1
 	users -= 1
+	server.customers += 1
 
 	# check whether there are more clients to in the queue
 	if(line_users>0):
 		# generate a new process for the client that starts a service
-		env.process(departure_process(env,index_service,queue))
+		env.process(departure_process(env,server,queue))
 	else:
-		free_services[index_service] = 0
+		server.busy = 0
 
 
 
 # ******************************************************************************
 
-# ******************************************************************************
-# Initialization
-# ******************************************************************************
-#
 
+# ******************************************************************************
+# Constants
+# ******************************************************************************
 
-#arrivals=0
-# State variable: number of users
-users=0
-line_users = 0
-# the simulation time
-time = 0
-# Queue of the clients
-queue=[]
-# Collect measurements
-data = Measure(0,0,0,0,0)
+confidence_level = 0.95
+n_runs = 4
+debug = False
+task = 1
 # Initialize the random number generator
+queue_time_file = open(f"queuesystem1_queuetime.dat", "w")
+print("LOAD\tci\tave\trel_err\tthTime",file=queue_time_file)
+queue_server_file = open(f"queuesystem1_serverload.dat", "w")
+print("LOAD\tci\tave\trel_err\tthService",file=queue_server_file)
+
 np.random.seed(42)
-# create the environment
-env = simpy.Environment()
-# start the arrival processes
-env.process(arrival_process(env, queue))
+#Not interesting result for small values of load
+loads = np.arange(0.2,1,0.05)
+print(loads)
+for l in loads:
+	LOAD = l  # load of the queue
+
+	#For task 1
+	average_queue_times = np.zeros(n_runs)
+	average_server_util = np.zeros(n_runs)
+
+	for r in range(n_runs):
+		print(f'Load: {l}, Run: {r}')
+		number_services = 1
+		servers = []
+		SERVICE = 10 # av service time
+		#Get services time form an uniform distribution around SERVICE time
+		#services = np.random.uniform(low=SERVICE-2, high=SERVICE+2, size=number_services)
+		#Set manually to have more control
+		for i in range(number_services):
+			servers.append(Server(SERVICE))
+
+		ARRIVAL = SERVICE/LOAD # av. inter-arrival time
+		TYPE1 = 1 # At the beginning all clients are of the same type, TYPE1
+
+		SIM_TIME = 50000 # condition to stop the simulation
+
+		exp_arrival_time = True
+		line_capacity = 10000000
+
+		# ******************************************************************************
+		# Initialization
+		# ******************************************************************************
+		#
+
+		#arrivals=0
+		# State variable: number of users
+		users=0
+		line_users = 0
+		# the simulation time
+		time = 0
+		# Queue of the clients
+		queue=[]
+		# Collect measurements
+		data = Measure(0,0,0,0,0)
+		# Initialize the random number generator
+		# np.random.seed(42)
+		# create the environment
+		env = simpy.Environment()
+		# start the arrival processes
+		env.process(arrival_process(env, queue))
 
 
-# simulate until SIM_TIME
-env.run(until=SIM_TIME)
+		# simulate until SIM_TIME
+		env.run(until=SIM_TIME)
 
-# ******************************************************************************
-# Print outputs
-# ******************************************************************************
+		# ******************************************************************************
+		# Print outputs
+		# ******************************************************************************
 
-#Coefficient of variation squared C^2_s
-if(exp_arrival_time):
-	coef_variation = 1
-else:
-	coef_variation = 0
-# lambda/mu = LOAD
-ro = LAMBDA/MU
+		#Coefficient of variation squared C^2_s
+		if(exp_arrival_time):
+			coef_variation = 1
+		else:
+			coef_variation = 0
+		# lambda/mu = LOAD
+		ro = LOAD
+		# print("No. of users in the queue at the end of the simulation:",users,\
+		# 			"\nTot. no. of arrivals =",data.arr,"- Tot. no. of departures =",data.dep, \
+		# 			"\nMax number of user in line =",data.max_user,
+		# 			"\nTot no. of losts =",data.arr-data.dep-users)
+		if(debug):
+			print("\n\n\n","*"*10,"  VALUES  ","*"*10)
+			print('LOAD = ',LOAD)
+			print('SERVICE = ',SERVICE)
+			print('ARRIVAL = ',ARRIVAL)
+			print('SIM_TIME = ',SIM_TIME)
+			print('exp_arrival_time = ',exp_arrival_time)
+			print('line_capacity = ',line_capacity)
+			print("*"*40)
 
-print("\n","*"*10,"  VALUES  ","*"*10)
-print('LOAD = ',LOAD)
-print('SERVICE = ',SERVICE)
-print('ARRIVAL = ',ARRIVAL)
-print('TYPE1 = ',TYPE1)
-print('LAMBDA = ',LAMBDA)
-print('MU = ',MU)
-print('SIM_TIME = ',SIM_TIME)
-print('exp_arrival_time = ',exp_arrival_time)
-print('line_capacity = ',line_capacity)
-print("*"*40)
+			print("\n\n","*"*10,"  MEASUREMENTS  ","*"*10)
+			print("No. of users in the queue at the end of the simulation:",users,\
+					"\nTot. no. of arrivals =",data.arr,"- Tot. no. of departures =",data.dep, \
+					"\nMax number of user in line =",data.max_user,
+					"\nTot no. of losts =",data.arr-data.dep-users)
+			print("Actual queue size: ",len(queue))
+			if len(queue)>0:
+				print("Arrival time of the last element in the queue:",queue[-1].arrival_time)
 
-print("\n\n","*"*10,"  MEASUREMENTS  ","*"*10)
-print("No. of users in the queue at the end of the simulation:",users,\
-		"\nTot. no. of arrivals =",data.arr,"- Tot. no. of departures =",data.dep, \
-		"\nMax number of user in line =",data.max_user,
-		"\nTot no. of losts =",data.arr-data.dep-users)
-print("Actual queue size: ",len(queue))
-if len(queue)>0:
-	print("Arrival time of the last element in the queue:",queue[-1].arrival_time)
+			print("\nLoad: ",LOAD)
+			print("Nominal arrival rate: ",1/ARRIVAL)
+			print("Measured arrival rate",data.arr/env.now,"\nMeasured departure rate: ",data.dep/env.now)
 
-print("\nLoad: ",LOAD)
-print("Nominal arrival rate: ",LAMBDA)
-print("Measured arrival rate",data.arr/env.now,"\nMeasured departure rate: ",data.dep/env.now)
+		#Theoretical time spent in the queue
+		theorical_queue_time = ro * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) ) #(LAMBDA)/(MU-LAMBDA)
+		queue_time = data.ut/env.now
+		average_queue_times[r] = queue_time
+		#print("\n\nAverage number of users\nTheorical: ", theorical_queue_time,"  -  Empirical: ",data.ut/env.now)
+		if(debug):
+			print("\nTime spent in the queue\nTheorical: ", theorical_queue_time,"  -  Empirical: ",queue_time)
 
-#Theoretical time spent in the queue
-theorical_queue_time = ro * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) ) #(LAMBDA)/(MU-LAMBDA)
-#print("\n\nAverage number of users\nTheorical: ", theorical_queue_time,"  -  Empirical: ",data.ut/env.now)
-print("\nTime spent in the queue\nTheorical: ", theorical_queue_time,"  -  Empirical: ",data.ut/env.now)
+		#Theoretical time spent in the system
+		theorical_system_time = SERVICE * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) ) #1.0/(MU-LAMBDA)
+		#print("Average delay \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
+		if(debug):
+			print("Time spent in the system \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
 
-#Theoretical time spent in the system
-theorical_system_time = 1/MU * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) ) #1.0/(MU-LAMBDA)
-#print("Average delay \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
-print("Time spent in the system \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
+		#print("Average delay \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
+		if(debug):
+			print("Time spent in the service \nTheorical= ",theorical_system_time-theorical_queue_time,"  -  Empirical: ",data.delay/data.dep-data.ut/env.now)
 
-# #print("Average delay \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
-# print("Time spent in the service \nTheorical= ",theorical_system_time-theorical_queue_time,"  -  Empirical: ",data.delay/data.dep-data.ut/env.now)
+		if(task==1):
+			server_utilization = servers[0].utilization/env.now
+			average_server_util[r] = server_utilization
+		if(debug):
+			print('\nServers utilization:')
+			for i,s in enumerate(servers):
+				server_utilization = s.utilization/env.now
+				print(f'Server: {i}, Utilization: {server_utilization}, Customers served: {s.customers}, Service Time: {s.service_time}')
+			print("*"*40)
 
-print("*"*40)
+	if(task==1):		
+		ave, ci, rel_err = evaluate_conf_interval(average_queue_times)
+		print(f'{LOAD}\t{ci}\t{ave}\t{rel_err}\t{theorical_queue_time}', file=queue_time_file)
+
+		ave, ci, rel_err = evaluate_conf_interval(average_server_util)
+		print(f'{LOAD}\t{ci}\t{ave}\t{rel_err}', file=queue_server_file)
+#Should I plot anything?
+queue_time_file.close()
+queue_server_file.close()
+
+import os
+os.system(f'python Plot.py')
