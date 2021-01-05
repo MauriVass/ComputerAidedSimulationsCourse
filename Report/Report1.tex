@@ -45,7 +45,7 @@
 }
 
 \newcounter{debug}
-\setcounter{debug}{3}
+\setcounter{debug}{1}
 
 \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
 %Space before and after \chapter {}{before}{after}
@@ -76,6 +76,37 @@
 \end{titlepage}
 
 \tableofcontents
+
+% ### REPORT 1 ###
+\ifnum\value{debug}=1 {
+    
+\chapter{Queue Systems}
+	These experiments are run to understand the behaviour of a queue system with a given number of servers (one or more), a capacity waiting line (finite or infinite) a FIFO (First In First Out) serving discipline and inter-arrivals time that follow a Poisson process.
+	
+	 \section{A single-server queuing system}
+	 			\subsection{Exponential Distributed Service Time}
+	 						\includegraphics[scale=0.6]{Lab5/QueueSystemRuns5.png} \\
+								It is possible to see that the results obtained with simulation are close to the theoretical formula. 
+			The theoretical value is calculated as:
+			\begin{equation}
+				theorical\_queue\_time = \frac{1}{ \mu - \lambda} 
+			\end{equation}
+			\begin{center}
+				Where $\lambda=\frac{1}{ARRIVAL}$ and $\mu=\frac{1}{SERVICE}$
+			\end{center}
+			
+	 			\subsection{??? Distributed Service Time}
+	 			\includegraphics[scale=0.6]{Lab5/QueueSystemExponentialDistributionFiniteQueueSingleServer4Runs.png} \\
+	 			\begin{equation}
+						general\_theorical\_queue\_time = ro \times ( 1 + ro \times \frac{1+C_s^2}{2\times(1-ro)} )
+				\end{equation}
+				\begin{center}
+						$ro=\frac{\lambda}{\mu}=LOAD$, $C_s^2$ is the coefficient of variation and depends on the service time distribution. \\
+						This is the general formula indeed can be applied also to a service time with Exponential distribution ($C_s^2=1$); in the case of ??? distribution the $C_s^2=0$
+				\end{center}
+} \fi
+
+
 
 % ### REPORT 2 ###
 \ifnum\value{debug}=2 {
@@ -130,7 +161,7 @@
 			
 			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns3.png} \\
 			It is possible to see that 3 runs are not enough since the confidence interval is not inside the theoretical values.
-			The lower bound is calucaled using the formula:
+			The lower bound is calculated using the formula:
 			
 			\begin{equation} \label{eq:1}
 				 \text{max\_occupacy = }\frac{\log n}{\log \log n} 
@@ -417,6 +448,7 @@ for each value of m.}
 								\item A bit string array,  from the \emph{bitarray} library, of length $2^{\#bits}$;
 								\item A numpy array, of length \#runs, where to store the probability of false positive at each run.
 							\end{itemize}
+					The bit string array allows to determine if an element is already stored or not with a constant access time of $\mathcal{O}(1)$, since it share the same property of a simple array.
 					
 			\subsection{Show in a graph the probability of false positive in function of the number of bits per fingerprint.}
 			\includegraphics[scale=0.6]{Lab3/BitStringArrayProbabilityFalsePositiveRuns5.png} \\
@@ -478,6 +510,7 @@ for each value of m.}
 					\item The same as the bit string array;
 					\item The number of hashes used.
 				\end{itemize}
+			For Bloom Filters, the time needed to determine if an element is already stored or not is constant and it has a worst case access time of $\mathcal{O}(k)$, where k is the number of hash functions used.
 			
 			\subsection{Define the main data structures for the simulator}
 						The same as the Bit String Array.
