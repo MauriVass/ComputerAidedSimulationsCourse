@@ -7,7 +7,7 @@ def evaluate_conf_interval(x):
 	t_sh = t.ppf((confidence_level + 1) / 2, df=n_runs - 1) # threshold for t_student
 
 	ave = x.mean() # average
-	stddev = x.std(ddof=1) # std dev
+	stddev = x.std(ddof=1) if n_runs > 1 else 0 # std dev
 	ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
 
 	#print(ave, stddev, t_sh, runs, ci, ave)
@@ -56,7 +56,7 @@ def GetServiceTime(service):
 	if(exp_arrival_time):
 		service_time = np.random.exponential(service, size=1)
 	else:
-		service_time = service #random.uniform(a=0,b=1/MU)
+		service_time = np.random.uniform(high=service, size=1)
 	return service_time
 
 
@@ -168,21 +168,22 @@ def departure_process(environment,server, queue):
 # ******************************************************************************
 
 confidence_level = 0.95
-n_runs = 4
-debug = False
+n_runs = 1
+debug = True
 task = 1
-# Initialize the random number generator
+
 queue_time_file = open(f"queuesystem1_queuetime.dat", "w")
 print("LOAD\tci\tave\trel_err\tthTime",file=queue_time_file)
 queue_server_file = open(f"queuesystem1_serverload.dat", "w")
 print("LOAD\tci\tave\trel_err\tthService",file=queue_server_file)
 
+# Initialize the random number generator
 np.random.seed(42)
 #Not interesting result for small values of load
 loads = np.arange(0.2,1,0.05)
 print(loads)
-for l in loads:
-	LOAD = l  # load of the queue
+for l in loads[12:13]:
+	LOAD = 0.85  # load of the queue
 
 	#For task 1
 	average_queue_times = np.zeros(n_runs)
@@ -202,10 +203,11 @@ for l in loads:
 		ARRIVAL = SERVICE/LOAD # av. inter-arrival time
 		TYPE1 = 1 # At the beginning all clients are of the same type, TYPE1
 
-		SIM_TIME = 50000 # condition to stop the simulation
+		SIM_TIME = 500000 # condition to stop the simulation
 
 		exp_arrival_time = True
-		line_capacity = 10000000
+		system_capacity = np.inf
+		line_capacity = system_capacity - number_services
 
 		# ******************************************************************************
 		# Initialization
@@ -239,9 +241,13 @@ for l in loads:
 
 		#Coefficient of variation squared C^2_s
 		if(exp_arrival_time):
+			mean_service = 1/SERVICE
 			coef_variation = 1
 		else:
-			coef_variation = 0
+			mean_service = SERVICE/2
+			var_service = (1.0/12.0) * SERVICE**2
+			coef_variation = var_service/mean_service**2 #0
+			print(coef_variation)
 		# lambda/mu = LOAD
 		ro = LOAD
 		# print("No. of users in the queue at the end of the simulation:",users,\
@@ -259,10 +265,11 @@ for l in loads:
 			print("*"*40)
 
 			print("\n\n","*"*10,"  MEASUREMENTS  ","*"*10)
+			theorical_losts = data.arr * (1-ro)/(1-ro**(system_capacity+1))*(ro**system_capacity) if system_capacity<np.Inf else 0
 			print("No. of users in the queue at the end of the simulation:",users,\
 					"\nTot. no. of arrivals =",data.arr,"- Tot. no. of departures =",data.dep, \
-					"\nMax number of user in line =",data.max_user,
-					"\nTot no. of losts =",data.arr-data.dep-users)
+					"\nMax number of user in line =",data.max_user, \
+					"\nTot no. of losts =",data.arr-data.dep-users, " Theoretical no. of losts =", theorical_losts)
 			print("Actual queue size: ",len(queue))
 			if len(queue)>0:
 				print("Arrival time of the last element in the queue:",queue[-1].arrival_time)
@@ -271,23 +278,34 @@ for l in loads:
 			print("Nominal arrival rate: ",1/ARRIVAL)
 			print("Measured arrival rate",data.arr/env.now,"\nMeasured departure rate: ",data.dep/env.now)
 
-		#Theoretical time spent in the queue
-		theorical_queue_time = ro * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) ) #(LAMBDA)/(MU-LAMBDA)
-		queue_time = data.ut/env.now
-		average_queue_times[r] = queue_time
-		#print("\n\nAverage number of users\nTheorical: ", theorical_queue_time,"  -  Empirical: ",data.ut/env.now)
-		if(debug):
-			print("\nTime spent in the queue\nTheorical: ", theorical_queue_time,"  -  Empirical: ",queue_time)
 
-		#Theoretical time spent in the system
-		theorical_system_time = SERVICE * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) ) #1.0/(MU-LAMBDA)
-		#print("Average delay \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
+		#THEORETICAL NUMBER OF USERS IN THE SYSYTEM
+		theorical_avg_n_user = ro * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) )
+		avg_n_user = data.ut/env.now
+		if(debug):
+			print("\nAverage number user system\nTheorical: ", theorical_avg_n_user,"  -  Empirical: ",avg_n_user)
+
+
+		#THEORETICAL TIME SPENT IN THE SYSTEM
+		theorical_system_time = theorical_avg_n_user*ARRIVAL #SERVICE * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) )
+		# theorical_system_time = mean_service * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) )
+		if(system_capacity<np.Inf):
+			theorical_system_time = ro/(1-ro**(system_capacity+1))*( 1 - (system_capacity+1) * ro**(system_capacity+1) )/(1-ro) / (1/ARRIVAL*(1-theorical_losts))
 		if(debug):
 			print("Time spent in the system \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
 
-		#print("Average delay \nTheorical= ",theorical_system_time,"  -  Empirical: ",data.delay/data.dep)
+
+
+		#THEORETICAL TIME SPENT IN THE QUEUE
+		theorical_num_user_queue = ro**2 / (1-ro)
+		theorical_queue_time = theorical_num_user_queue*ARRIVAL #ro * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) )
+		# theorical_queue_time = mean_service * ( 1 + ro * (1+coef_variation)/(2*(1-ro)) )
+		# theoretical_avg_n_user = data.ut/env.now
+		queue_time = data.delay/data.dep - SERVICE
+		average_queue_times[r] = queue_time
 		if(debug):
-			print("Time spent in the service \nTheorical= ",theorical_system_time-theorical_queue_time,"  -  Empirical: ",data.delay/data.dep-data.ut/env.now)
+			print("Time spent in the queue\nTheorical: ", theorical_queue_time,"  -  Empirical: ", queue_time)
+
 
 		if(task==1):
 			server_utilization = servers[0].utilization/env.now
@@ -305,9 +323,10 @@ for l in loads:
 
 		ave, ci, rel_err = evaluate_conf_interval(average_server_util)
 		print(f'{LOAD}\t{ci}\t{ave}\t{rel_err}', file=queue_server_file)
-#Should I plot anything?
+
 queue_time_file.close()
 queue_server_file.close()
 
 import os
-os.system(f'python Plot.py')
+if(n_runs>1):
+	os.system(f'python Plot.py')
