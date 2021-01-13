@@ -3,14 +3,13 @@ import matplotlib.pyplot as plt
 print('Loading pygame....')
 import pygame
 import time
-from scipy import spatial
 from scipy.stats import t
 
 def evaluate_conf_interval(x):
 	t_sh = t.ppf((confidence_level + 1) / 2, df=n_runs - 1) # threshold for t_student
 
 	ave = x.mean() # average
-	stddev = x.std(ddof=1) # std dev
+	stddev = x.std(ddof=1) if n_runs>1 else 0 # std dev
 	ci = t_sh * stddev / np.sqrt(n_runs) # confidence interval half width
 
 	#print(ave, stddev, t_sh, runs, ci, ave)
@@ -52,17 +51,19 @@ class Individual():
 
 		other_pos = other.pos
 		#First check x distance
-		x_dist = abs(self.pos[0]-other_pos[0])
-		if(x_dist<=distance):
-			#Then check y distance
-			y_dist = abs(self.pos[1]-other_pos[1])
-			if(y_dist<=distance):
-				#Finally calculate the actuall distance between the 2 points. Avoid calculate the sqrt
-				# dis = x_dist**2 + y_dist**2
-				# if(dis<=distance**2):
-					#Withing the range (Contact)
-				# self.contacts += 1
-				is_infected = self.Infect(other,beta)
+		# x_dist = abs(self.pos[0]-other_pos[0])
+		# if(x_dist<=distance):
+		# 	#Then check y distance
+		# 	y_dist = abs(self.pos[1]-other_pos[1])
+		# 	if(y_dist<=distance):
+		# 		#Finally calculate the actuall distance between the 2 points. Avoid calculate the sqrt
+		# 		dis = x_dist**2 + y_dist**2
+		# 		if(dis<=distance**2):
+		# 			# Withing the range (Contact)
+		# 			is_infected = self.Infect(other,beta)
+		if(abs(self.pos[0]-other_pos[0])**2 + abs(self.pos[1]-other_pos[1])**2<=distance**2):
+			is_infected = self.Infect(other,beta)
+
 		#Too far (no contacts)
 		return is_infected
 
@@ -71,11 +72,14 @@ class Individual():
 			#Flip a 'coin' to infect the contact
 			r = np.random.uniform()
 			if(r<beta):
+				# print('Infected: ', other.id, self.id, r, beta)
 				self.infections += 1
 				other.category='i'
 				return True
 			else: 
 				return False
+		else:			
+			return False
 
 	#Move the Individual to a new random position
 	def Move(self,range):
@@ -87,11 +91,12 @@ class Individual():
 			direction = (0.5,0.5) - self.pos
 			pos = self.pos + np.random.uniform(0,0.1,size=2) * direction
 
-			#Just clip the position between [0,1]
+			#Just clip the position between [0,1] (not a nice visual effect)
 			# padding = 0.005
 			# pos[0] = np.clip(pos[0],0+padding,1-padding)
 			# pos[1] = np.clip(pos[1],0+padding,1-padding)
 		self.pos = pos
+
 	#Plot the Individual shape: a circle
 	def PlotCircle(self,screen,screen_size):
 		s = 2
@@ -99,6 +104,7 @@ class Individual():
 			color = (0,120,255) #Susceptible
 		elif(self.category=='i'):
 			color =  (255,0,0) #Infected
+			s = 3.5
 		elif(self.category=='r'):
 			color = (50,205,50) #Recovered
 		#Add a little shitf to the points
@@ -141,10 +147,10 @@ screen = pygame.display.set_mode(screen_size)
 
 ###	ÌNITIAL PARAMETERS	###
 #How many people there are in the population
-population_size = 10000 # N
+population_size = 5000 # N
 #Number of days we will consider
 total_days = 365
-#The number of people per day an infected person infects someone susceptible 
+#The number of people per day an infected person infects someone Susceptible 
 transmission_rate=0.2 #(beta) [day^-1]
 #The number of days an infencted person stays infected 
 infection_period=14
@@ -152,13 +158,21 @@ recovery_rate=1/infection_period #(gamma) [day^-1]
 #Expected number of people the first infected individual will infect (Beta/gamma)
 R0 = transmission_rate/recovery_rate
 
-#The distance an Individual can move each day
-#To have an idea if 1 is 5km (a small city, with 10k abitants) each individual can move in each direction of a distance of 500m
-length_movement = 1/15
-#The distance at which Individual can interact (contact)
-#With the same numbers above, a contact is 'experienced' when 2 people are closer than 20mt
-contact_range = 4/1000
-# ^^^ This may not be accurate but it is just to give some meaning to these variables ^^^
+extension = False
+if(extension):
+	#The distance an Individual can move each day
+	#To have an idea if 1 is 5km (a small city, with 10k abitants) each individual can move in each direction of a distance of 500m
+	length_movement = 1/14
+	#The distance at which Individual can interact (contact)
+	#With the same numbers above, a contact is 'experienced' when 2 people are closer than 20mt
+	contact_range = 5/1000
+	# ^^^ This may not be accurate but it is just to give some meaning to these variables ^^^
+else:
+	#In the simple SIR model there is no notion of spatiality (and distance)
+	#So length_movement is set for semplicity (it actually would not change the result)
+	#contact_range is set to 1 since an Infected individual can infect a Susceptible individual to any distance
+	length_movement = 0
+	contact_range = 1
 
 print('Transmission Rate: ', transmission_rate)
 print('Recovery Rate: ', recovery_rate)
@@ -168,13 +182,16 @@ initial_seed = 2502
 np.random.seed(initial_seed)
 confidence_level = 0.95
 
-n_runs = 7
+n_runs = 1 #7
 max_infections_runs = np.zeros(n_runs)
 max_infections_day_runs = np.zeros(n_runs)
 epidemic_ends_runs = np.zeros(n_runs)
 
 #Number of regions to divide the population in (number_regions=A -> grid AxA, A^2 regions)
-number_regions = 3
+if(extension):
+	number_regions = 3
+#Since there is no notion of spatiality it make no sense to divide the population in regions in the simple SIR model
+
 #This parameter seems to work fine. Some results:
 '''
 number_regions = 1
@@ -196,9 +213,9 @@ End situation: S: 2313, I: 0, R: 7687
 Max Infections: 2191, day at which occurs: 132
 '''
 #The time for the execution of 1 run decrease than a factor ~1/3 increasing the number_regions by 1
-#Dividing the population in regions add an approximations,
-#since 2 persons in 2 different regions but close enough(dist<concact_range) can not be infected
-#Also the difference between values(Max Infections,...) is not too much(they are affected by randomicity) but the speed up is significant
+#Dividing the population in regions add an approximation,
+#since 2 persons in 2 different regions (e.g. at the edge) but close enough(dist<concact_range) can not be infected,
+#Also the difference between statistics(Max Infections,...) is not too much(the results are also affected by randomicity) but the speed up is significant!
 ###	END INITIAL PARAMETERS	###
 
 def Simulator(r):
@@ -212,7 +229,7 @@ def Simulator(r):
 
 	#Initial conditions (day 0)
 	first_infected = np.random.randint(population_size)
-	# print(f'First infected index: {first_infected}')
+	print(f'First infected index: {first_infected}')
 	population[first_infected].category = 'i'
 	infected_individuals.add(first_infected)
 
@@ -235,65 +252,98 @@ def Simulator(r):
 		new_infected = 0
 		new_recovered = 0
 		print('Day ',d,end='\r')
+		# print(f'Day: {d}, Situation: S: {S[d]}, I: {I[d]}, R: {R[d]}, Total: {S[d]+I[d]+R[d]}')
 		ti = time.time()
-		screen.fill((255, 255, 255))
+		screen.fill((225, 225, 225))
 
 		#Dictionary with: 
 		#		key: the number of the region
 		#		value: a set with all the Susceptible individuals in that region
-		individuals_per_regions = {}
-		for i in range(number_regions**2):
-			individuals_per_regions[i] = set()
-		#Loop over all the population
-		for p in population:
-			#Move the points for the next day
-			p.Move(length_movement)
-			#Draw the Individual at its position
-			p.PlotCircle(screen,screen_size)
+		susceptibles_per_regions = {}
+		if(extension):
+			#Create an entry in the dict for each region region
+			for i in range(number_regions**2):
+				susceptibles_per_regions[i] = set()
 
-			#Find the regions for Susceptible and Infected people
-			if(p.category!='r'):
-				#Get the belonging region
-				region = ReturnRegion(p.pos)
+			#Loop over all the population
+			for p in population:
+				#Move the points randomly
+				p.Move(length_movement)
+
+				#Find the regions for Susceptible and Infected people
+				if(p.category!='r'):
+					#Get the belonging region
+					region = ReturnRegion(p.pos)
+					if(p.category=='s'):
+						#Add it to the dict only if is a Susceptible
+						susceptibles_per_regions[region].add(p.id)
+					else:
+						#Update the infected's region
+						p.region = region
+		else:
+			susceptibles_per_regions[0] = set()
+			for p in population:
 				if(p.category=='s'):
-					#Add it to the dict only if is a Susceptible
-					individuals_per_regions[region].add(p.id)
-				else:
-					#Update the infected's region
-					p.region = region
+					susceptibles_per_regions[0].add(p.id)
+				#In both cases (extension=True/False) draw the individuals in their positions
+				#For the case extension=False, since there is no movement, it is needed to change the color of the individuals
+				#It is a fast computation
+				#Draw the Individual at its position
+				p.PlotCircle(screen,screen_size)
 
-		te_plot = time.time()
+		#Update the screen
+		pygame.display.flip()
+		pygame.display.update()
+		# time.sleep(5)
 
+		tii = time.time()
+		# print('Dividing:', tii-ti)
 		#Store a temponary variable since infected_individuals is changed during the loop
 		current_infections = list(infected_individuals)
 		#Loop over all the infected individual. m<N
+		# print(len(susceptibles_per_regions), len(susceptibles_per_regions[0]))
+		a = 0
 		for inf_indi in current_infections:
-			#Get the region of the current infected individual
-			infected_region = population[inf_indi].region
-			#Get the list of the susceptible pp in the infected_region
-			population_in_region = individuals_per_regions[infected_region]
-			# Loop over all the individuals in the infected_region
+			if(extension):
+				#Get the region of the current infected individual
+				infected_region = population[inf_indi].region
+				#Get the list (of integers, the indeces) of the Susceptible pp in the infected_region
+				population_in_region = susceptibles_per_regions[infected_region]
+				# Loop over all the individuals in the infected_region
+			else:
+				#Get the list (of integers, the indeces) of the Susceptible pp
+				population_in_region = susceptibles_per_regions[0]
+
 			for pop_index in population_in_region:
+				if(extension):
+					#Since there is the notion of spatiality there is no need to scale the transmission_rate
+					rate = transmission_rate
+				else:
+					#Scale the transmission_rate on the population size
+					rate = transmission_rate/population_size
+
 				#Calcaulate the distance between the two points: i and j
-				infected = population[inf_indi].CheckDistance(population[pop_index],contact_range,transmission_rate)
+				#The parameter contact_range is only needed for the case extension=True
+				infected = population[inf_indi].CheckDistance(population[pop_index],contact_range,rate)
 				if(infected):
 					infected_individuals.add(pop_index)
 					new_infected += 1
 
-			#Plot the edge between the infected and all its contacts (Too many points!!) 
+			#Plot the edge between the infected and all its contacts (Too many points!!!) 
 			#population[inf_indi].PlotLink(screen,screen_size)
 			
-			#For each infected individual, evaluate if he has spent more than infection_period days -> he recovered
-			#This returns the ID of the individual if he recovered or nothing (None)
+			#For each infected individual, evaluate if he has spent more than 'infection_period' days as infected -> he recovered
+			#This returns the ID of the individual if he recovered otherwise nothing (None)
 			recovered = population[inf_indi].UpdateState(infection_period=infection_period)
 			if(recovered != None):
 				infected_individuals.remove(recovered)
 				new_recovered += 1
 
 		te = time.time()
-		# print(f'Checking Distance Time: {(te-te_plot):.2f}')
+		# print(f'Checking Distance Time: {(te-tii):.2f}')
 
-		#The future(tomorrow, d+1) states depends on the number on the number of new infections and recovers(today, d)
+		#The future(tomorrow, d+1) states depends on:
+		#the present states(today, d) and on the number of new infections and recovers(today, d)
 		S[d+1] = S[d] - new_infected
 		I[d+1] = I[d] + new_infected - new_recovered
 		R[d+1] = R[d] + new_recovered
@@ -305,18 +355,16 @@ def Simulator(r):
 		# print(float(cum_infections),float(n_infected),float(cum_infections) / float(n_infected))
 		Rt[d+1] = float(cum_infections) / float(n_infected)
 
-		# print(f'Situation: S: {S[d]}, I: {I[d]}, R: {R[d]}, Total: {S[d]+I[d]+R[d]}')
+		# print(f'Situation: S: {S[d+1]}, I: {I[d+1]}, R: {R[d+1]}, Total: {S[d+1]+I[d+1]+R[d+1]}')
 		if(I[d+1]<1):
 			end_epidemic = d + 1
 			break
 
-		pygame.display.flip()
-		pygame.display.update()
-		#time.sleep(.01)
+		# time.sleep(5)
 
 	tt_end = time.time()
-	print(f'Run: {r},Total time: {(tt_end-tt_init):.2f}')
-
+	# print(f'Run: {r},Total time: {(tt_end-tt_init):.2f}')
+	print(end_epidemic, len(S))
 	print(f'Epidemic ended at day: {end_epidemic}')
 	print(f'End situation: S: {S[end_epidemic]}, I: {I[end_epidemic]}, R: {R[end_epidemic]}')
 
@@ -327,10 +375,12 @@ def Simulator(r):
 	print(f"{'#'*5}\tEnding Run: {r}\t{'#'*5}")
 
 	fig1, ax1 = plt.subplots(figsize=(12, 6), dpi=80)
-	days = range(end_epidemic)
-	S = S[:end_epidemic]
-	I = I[:end_epidemic]
-	R = R[:end_epidemic]
+	#The +1 since the right extreme is not included
+	days = range(end_epidemic+1)
+	S = S[:end_epidemic+1]
+	I = I[:end_epidemic+1]
+	R = R[:end_epidemic+1]
+
 	ax1.plot(days,S, label='Susceptible')
 	ax1.plot(days,I, label='Infected')
 	ax1.plot(days,R, label='Recovered')
@@ -347,7 +397,7 @@ def Simulator(r):
 	fig1.savefig(save_title)
 
 	fig2, ax2 = plt.subplots(figsize=(12, 6), dpi=80)
-	Rt = Rt[:end_epidemic]
+	Rt = Rt[:end_epidemic+1]
 	ax2.plot(days,Rt, label='Rt')
 	title = 'Simulative SIR Model (Rt)'	
 	ax2.set_title(title)
@@ -366,29 +416,22 @@ for r in range(n_runs):
 	max_inf, max_day, end_epi = Simulator(r)
 
 	#Check for not degenerate result
-	if(max_day<20):
+	if(max_day>20):
 		max_infections_runs[r] = max_inf
 		max_infections_day_runs[r] = max_day
 		epidemic_ends_runs[r] = end_epi
 	else:
-		print('DEGENERATE ', i)
+		print('DEGENERATE ', r)
 
-maxInfectionsfile = open(f"simulativeSIRmodelMaxInf.dat", "w")
-print("ave\tci\trel_err",file=maxInfectionsfile)
-ave, ci, rel_err = evaluate_conf_interval(max_infections_runs)
-print(f"{ave}\t{ci}\t{rel_err}",file=maxInfectionsfile)
-print(f"maxInfections: {ave}\t{ci}\t{rel_err}")
+simfile = open(f"simulativeSIRmodel.dat", "w")
+print("aveMaxInfec\tciMaxInfec\trel_errMaxInfec\taveMaxDayInfec\tciMaxDayInfec\trel_errMaxDayInfec\taveEndInfec\tciEndInfec\trel_errEndInfec",file=simfile)
+aveMaxInfec, ciMaxInfec, rel_errMaxInfec = evaluate_conf_interval(max_infections_runs)
+aveMaxDayInfec, ciMaxDayInfec, rel_errMaxDayInfec = evaluate_conf_interval(max_infections_day_runs)
+aveEndInfec, ciEndInfec, rel_errEndInfec = evaluate_conf_interval(epidemic_ends_runs)
 
-maxDayInfectionsfile = open(f"simulativeSIRmodelMaxDayInf.dat", "w")
-print("ave\tci\trel_err",file=maxDayInfectionsfile)
-ave, ci, rel_err = evaluate_conf_interval(max_infections_day_runs)
-print(f"{ave}\t{ci}\t{rel_err}",file=maxDayInfectionsfile)
-print(f"maxDayInfections: {ave}\t{ci}\t{rel_err}")
-
-epidemicEndfile = open(f"simulativeSIRmodelEpicEnd.dat", "w")
-print("ave\tci\trel_err",file=epidemicEndfile)
-ave, ci, rel_err = evaluate_conf_interval(epidemic_ends_runs)
-print(f"{ave}\t{ci}\t{rel_err}",file=epidemicEndfile)
-print(f"epidemicEnd: {ave}\t{ci}\t{rel_err}")
+print(f"{aveMaxInfec}\t{ciMaxInfec}\t{rel_errMaxInfec}\t{aveMaxDayInfec}\t{ciMaxDayInfec}\t{rel_errMaxDayInfec}\t{aveEndInfec}\t{ciEndInfec}\t{rel_errEndInfec}",file=simfile)
+print(f"maxInfections: {aveMaxInfec}\t{ciMaxInfec}\t{rel_errMaxInfec}")
+print(f"maxDayInfections: {aveMaxDayInfec}\t{ciMaxDayInfec}\t{rel_errMaxDayInfec}")
+print(f"epidemicEnd: {aveEndInfec}\t{ciEndInfec}\t{rel_errEndInfec}")
 
 pygame.quit()

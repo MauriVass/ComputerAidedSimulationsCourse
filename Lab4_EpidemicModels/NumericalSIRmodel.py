@@ -11,8 +11,8 @@ transmission_rate=0.2
 infection_period=14
 recovery_rate=1/infection_period
 
-print('Transmission Rate: ', transmission_rate)
-print('Recovery Rate: ', recovery_rate)
+print(f'Transmission Rate: {transmission_rate}')
+print(f'Recovery Rate: {recovery_rate:.4f}')
 
 initial_seed = 2500
 np.random.seed(initial_seed)
@@ -26,44 +26,54 @@ S[0] = population_size - 1
 I[0] = 1
 R[0] = 0
 
-end_epidemic = np.Inf
-#Skip the day 0
-for d in range(1,365):
+#The days are in range [0,total_days-1]
+#In the worst case the pandemic ends at the end of the simulation
+end_epidemic = total_days - 1
+for d in range(0,total_days-1):
+	print('Day ',d,end='\n')
+	print(f'Situation: S: {S[d]}, I: {I[d]}, R: {R[d]}, Total: {S[d]+I[d]+R[d]}')
 	###	Solving Differential equations	###
 	#The number of susceptible people tomorrow depends on today S and I values
-	susceptible_today_value = (transmission_rate/population_size)*S[d-1]*I[d-1]
-	infected_today_value = recovery_rate * I[d-1]
+	susceptible_today_value = (transmission_rate/population_size)*S[d]*I[d]
+	infected_today_value = recovery_rate * I[d]
 	# '1' is the delta time: 1 day in this case
-	S[d] = S[d-1] - 1 * susceptible_today_value
-	I[d] = I[d-1] + 1 * (susceptible_today_value-infected_today_value)
-	R[d] = R[d-1] + 1 * infected_today_value
-	if(I[d]<1):
+	S[d+1] = S[d] - 1 * susceptible_today_value
+	I[d+1] = I[d] + 1 * (susceptible_today_value-infected_today_value)
+	R[d+1] = R[d] + 1 * infected_today_value
+	if(I[d+1]<1):
 		end_epidemic = d
 		break
 
 print(f'Epidemic ended at day: {end_epidemic}')
-print(f'End situation: S: {S[end_epidemic]}, I: {I[end_epidemic]}, R: {R[end_epidemic]}')
+print(f'End situation: S: {S[end_epidemic]:.2f}, I: {I[end_epidemic]:.2f}, R: {R[end_epidemic]:.2f}')
 
 
 plt.figure(figsize=(12, 6), dpi=80)
-days = range(end_epidemic)
-S = S[:end_epidemic]
-I = I[:end_epidemic]
-R = R[:end_epidemic]
+#The +1 since the right extreme is not included
+days = range(end_epidemic+1)
+S = S[:end_epidemic+1]
+I = I[:end_epidemic+1]
+R = R[:end_epidemic+1]
 plt.plot(days,S, label='Susceptible')
 plt.plot(days,I, label='Infected')
 plt.plot(days,R, label='Recovered')
 
 
-title = 'Numeric SIR Model'	
+title = 'Numerical SIR Model'	
 plt.title(title)
 plt.legend(loc='center right')
 plt.xlabel('Days')
 plt.ylabel('Number People')
 
+remove_chars = [' ' , '=' , ',' , ':']
+for r in remove_chars:
+	title = title.replace(r,'')
+save_title = (f'Images/{title}')
+plt.savefig(save_title)
+
 #Expected number of people the first infected individual will infect (Beta/gamma)
 R0 = transmission_rate/recovery_rate
-print(f'R0 value: {R0}')
+print(f'R0 value: {R0:.2f}')
 
 #Max number of infections and the day when this happens
 day_max_infections = np.argmax(I)
