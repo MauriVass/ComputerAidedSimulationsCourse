@@ -6,16 +6,22 @@ import pandas as pd
 import sys
 import seaborn as sns
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--bins', type=int, help='Number of bins: [1,2,4]', required=False, default=1)
+parser.add_argument('--runs', type=int, help='Number or runs: (r>1)', required=False, default=3)
+args = parser.parse_args()
+
 def functionNoLoad(x):
     return math.log(x)/(math.log(math.log(x)))
 def functionLoad(x,d):
     return (math.log(math.log(x)))/math.log(d)
 
 #Load
-d = int(sys.argv[1])
-runs = int(sys.argv[2])
+d = args.bins
+runs = args.runs
 
-data = pd.read_csv(f'binsballs{d}_runs{runs}.dat',sep='\t')
+data = pd.read_csv(f'binsballs_bins{d}_runs{runs}.dat',sep='\t')
 
 Ns = np.array(data['n'])
 n = max(Ns)
@@ -46,8 +52,8 @@ plt.plot(Ns,means,c='red', marker="o", label='Simulation')
 plt.fill_between(Ns, lb, ub, color='green', alpha=0.2, label=f'95% Confidence Interval')
 
 
-title = 'Random Dropping Policy' if d==1 else f'Random Load Balancing d = {d}'
-plt.title(f'{title}, Runs= {runs}')
+title = 'Random Dropping Policy' if d==1 else f'Random Load Balancing d: {d}'
+plt.title(f'{title}, Runs: {runs}')
 
 plt.legend(loc='upper left')
 plt.xscale("log")
@@ -56,9 +62,9 @@ plt.ylabel('Max Bin Occupacy')
 if(d>1):
 	plt.ylim(0.8, 5.2)
 
-remove_chars = [' ','=']
+remove_chars = [' ',':']
 for r in remove_chars:
 	title = title.replace(r,'')
-save_title = (f'Images/{title}Runs= {runs}')
+save_title = (f'Images/{title}Runs{runs}')
 plt.savefig(save_title)
 plt.show()

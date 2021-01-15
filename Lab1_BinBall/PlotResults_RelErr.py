@@ -6,28 +6,28 @@ import pandas as pd
 import sys
 import seaborn as sns
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--bins', type=int, help='Number of bins: [1,2,4]', required=False, default=1)
+args = parser.parse_args()
+
 #Load
-d = int(sys.argv[1])
+d = args.bins
 
-files_index = [3,5,10]
+files_runs = [3,5,10]
 colors = ['red','green','blue','grey']
-rel_errors = {}
-for i in files_index:
-	data = pd.read_csv(f'binsballs{d}_runs{i}.dat',sep='\t')
-
+plt.figure(figsize=(12, 6), dpi=80)
+for i, index in enumerate(files_runs):
+	data = pd.read_csv(f'binsballs_bins{d}_runs{index}.dat',sep='\t')
 
 	Ns = np.array(data['n'])
 	n = max(Ns)
 
 	rel_err = np.array(data['RelErr'])
-	#rel_errors.append(rel_err)
-	rel_errors[i] = rel_err
 
-plt.figure(figsize=(12, 6), dpi=80)
-for i, index in enumerate(files_index):
-	plt.plot(Ns,rel_errors[index]*100,c=colors[i], marker="o", label=f'Simulation with runs= {index}')
+	plt.plot(Ns,rel_err*100,c=colors[i], marker="o", label=f'Simulation with Runs: {index}')
 
-title = 'Random Dropping Policy' if d==1 else f'Random Load Balancing d = {d}'
+title = 'Random Dropping Policy' if d==1 else f'Random Load Balancing d: {d}'
 title = 'Relative Errors: ' + title
 plt.title(f'{title}')
 

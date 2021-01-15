@@ -1,13 +1,16 @@
 import numpy as np
 import random
 from scipy.stats import t
-import sys
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--bins', type=int, help='Number of bins: [1,2,4]', required=False, default=1)
+parser.add_argument('--runs', type=int, help='Number or runs: (r>1)', required=False, default=3)
+args = parser.parse_args()
 
 # initial settings
-if(len(sys.argv)!=3):
-    raise RuntimeError('Wrong input data: Number of bins [1,2,4], Number of runs')
-n_bins = int(sys.argv[1]) #Number of bins to be selected at each iteration. This can be 1,2,4
-runs = int(sys.argv[2]) #Number of runs
+n_bins = args.bins #Number of bins to be selected at each iteration. This can be 1,2,4
+runs = args.runs #Number of runs
 initial_seed = 2502
 confidence_level = 0.95
 
@@ -48,7 +51,7 @@ def findLeastOccupied(bins,rnd_bins):
     for i in rnd_bins:
         if(min_val > bins[i]):
             min_val = bins[i]
-            index = i 
+            index = i
     return index
 
 def run_simulator(n): # run the bins-and-ball model for n bins and for multiple runs
@@ -62,7 +65,7 @@ def run_simulator(n): # run the bins-and-ball model for n bins and for multiple 
             bins[ind] = bins[ind] + 1 # Update bins occupancy
         maxvec[r] = bins.max() # compute the max occupancy
     ave, ci, rel_err = evaluate_conf_interval(maxvec) # evaluate the confidence intervals
-    lower_bound = np.log(n) / np.log(np.log(n)) # theoretical formula
+    lower_bound = np.log(n) / np.log(np.log(n)) if n_bins==1 else np.log(np.log(n)) / np.log(n_bins) # theoretical formula
     return n, lower_bound, 3 * lower_bound, ave - ci, ave, ave + ci, rel_err
 
 #########################
@@ -70,10 +73,13 @@ def run_simulator(n): # run the bins-and-ball model for n bins and for multiple 
 #########################
 # open the outfile file and write the header
 
-datafile = open(f"binsballs{n_bins}_runs{runs}.dat", "w")
+datafile = open(f"binsballs_bins{n_bins}_runs{runs}.dat", "w")
 print("n\tLowerbound\t3*Lowerbound\tciLow\tave\tciHigh\tRelErr",file=datafile)
 for n in input_list: # for each number of bins and balls
     print("Running for n=",n) # log starting a run
     out_run=run_simulator(n) # get the output results of a run
     print(*out_run,sep="\t",file=datafile) # write on a file
 datafile.close() # close the file
+
+import os
+os.system(f"python PlotResults.py --bins {n_bins} --runs {runs}")  
