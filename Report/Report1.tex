@@ -1,4 +1,4 @@
-\documentclass{report}
+\documentclass[twocolumn,letterpaper]{report}
 \usepackage[utf8]{inputenc}
 \usepackage{titlesec}
 \usepackage{geometry}
@@ -9,12 +9,14 @@
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{array}
+\usepackage[none]{hyphenat} %To avoid split lines at the end of the line (divisione in sillabe)
+\usepackage{enumitem}
 \usepackage{dcolumn} % automatically loads the 'array' package
 \geometry{
 	 a4paper,
 	 total={210mm,297mm},
-	 left=10mm,
-	 right=10mm,
+	 left=8mm,
+	 right=8mm,
 	 top=20mm,
 	 bottom=15mm
  }
@@ -26,6 +28,8 @@
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\usepackage{setspace}
 
 \lstset{frame=tb,
   language=Python,
@@ -45,29 +49,54 @@
 }
 
 \newcounter{debug}
-\setcounter{debug}{4}
+\setcounter{debug}{2}
 
 \titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Huge}
-%Space before and after \chapter {}{before}{after}
-\titlespacing*{\chapter}{0pt}{-50pt}{10pt}
+%Space before and after \chapter {left}{before}{after}
+\titlespacing*{\chapter}{0pt}{-50pt}{1pt}
+\titlespacing*{\section}{0pt}{8pt}{1pt}
+\titlespacing*{\subsection}{0pt}{8pt}{1pt}
+
+%Separation between the columns (2 columns report)
+\setlength{\columnsep}{15pt}
+%Space after a `space'
+\setlength{\parskip}{0mm}
+
 
 \begin{document}
+%Space between elements of a list use (nosep for no space between items) {itemsep=-6mm}
+\setlist[itemize]{nosep,topsep={1pt},partopsep={0pt}}
+
+%Remove spaev after and before \equation
+\setlength{\abovedisplayskip}{0pt}
+\setlength{\belowdisplayskip}{3pt}
+\setlength{\abovedisplayshortskip}{0pt}
+\setlength{\belowdisplayshortskip}{3pt}
 
 \begin{titlepage}
    \begin{center}
        %\vspace*{1cm}
-       \LARGE
+       \Huge
        \textbf{POLITECNICO DI TORINO}
-       \vspace{1cm}
-       
-       \includegraphics[scale=0.2]{logoPolito-1.png}
-       \vspace{0.8cm}
-       
-        \textbf{Computer aided simulations and performance evaluation}
        \vspace{1.5cm}
        
+       \includegraphics[scale=0.24]{logoPolito-1.png}
+       %\vspace{0.8cm}
+       
+       \hspace{0pt}
+					\vfill
+					
+					\Huge
+        \textbf{Computer aided simulations and \\
+        								performance evaluation}
+       \vspace{1cm}
+       
+       \Large
        Academic year 2020/21
        \vfill
+       
+       \vfill
+				\hspace{0pt}
        \begin{flushright}
        			\large
             VASSALLO Maurizio, s276961
@@ -75,17 +104,21 @@
    \end{center}
 \end{titlepage}
 
+\onecolumn
 \tableofcontents
+\newpage
+\clearpage
 
+\twocolumn
 % ### REPORT 1 ###
 \ifnum\value{debug}=1 {
     
 \chapter{Queue Systems}
 	These experiments are run to understand the behaviour of a queue system with a given number of servers (one or more), a capacity waiting line (finite or infinite) a FIFO (First In First Out) serving discipline and inter-arrivals time that follow a Poisson process.
 	
-	 \section{A single-server queuing system}
+	 \section{A single-Server queuing system}
 	 			\subsection{Exponential Distributed Service Time}
-	 						\includegraphics[scale=0.6]{Lab5/QueueSystemRuns5.png} \\
+	 						\includegraphics[scale=0.6]{Lab5/QueueSystemExponentialDistributionInfiniteQueueSingleServer4Runs.png} \\
 								It is possible to see that the results obtained with simulation are close to the theoretical formula. 
 			The theoretical value is calculated as:
 			\begin{equation}
@@ -95,15 +128,47 @@
 				Where $\lambda=\frac{1}{ARRIVAL}$ and $\mu=\frac{1}{SERVICE}$
 			\end{center}
 			
-	 			\subsection{??? Distributed Service Time}
-	 			\includegraphics[scale=0.6]{Lab5/QueueSystemExponentialDistributionFiniteQueueSingleServer4Runs.png} \\
+	 			\subsection{Uniform Distributed Service Time}
+	 			\includegraphics[scale=0.6]{Lab5/QueueSystemUniformDistributionInfiniteQueueSingleServer4Runs.png} \\
 	 			\begin{equation}
-						general\_theorical\_queue\_time = ro \times ( 1 + ro \times \frac{1+C_s^2}{2\times(1-ro)} )
+						general\_theorical\_queue\_time = ro \times ( 1 + ro \frac{1+C_s^2}{2\times(1-ro)} )
 				\end{equation}
-				\begin{center}
-						$ro=\frac{\lambda}{\mu}=LOAD$, $C_s^2$ is the coefficient of variation and depends on the service time distribution. \\
-						This is the general formula indeed can be applied also to a service time with Exponential distribution ($C_s^2=1$); in the case of ??? distribution the $C_s^2=0$
-				\end{center}
+						Where $ro=\frac{\lambda}{\mu}=LOAD$, $C_s^2=\frac{Var(S)}{E^2(s)}$ is the Coefficient of Variation (ratio between the Variance and the Mean squared) and depends on the service time distribution. \\
+						This is the general formula indeed can be applied also to a service time with Exponential distribution ($C_s^2=1$); in the case of Uniform distribution the $C_s^2=\frac{1}{3}$. \\
+						It is possible to see that the average waiting time is lower with respect to the Exponential distribution, so to improve the performance of a queue system a possibility way is to assign to a job a service time that is uniformly distributed (not always possible to decide a priori).
+						
+						
+						
+	\section{Finite Capacity of the waiting line}
+	 			\subsection{Exponential Distributed Service Time}
+	 						\includegraphics[scale=0.6]{Lab5/QueueSystemExponentialDistributionFiniteQueueSingleServer3Runs.png} \\
+It is possible to see that the average waiting time converges for any value of LOAD to a specific value. This value is $queue\_time = B \times SERVICE$, where B is the maximum value of allowed client in the system and SERVICE is the average time spent in a server. \\
+It is worth to mention that with an unlimited queue length the average waiting time would diverge for any $LOAD \ge 1$.
+
+	 					\includegraphics[scale=0.6]{Lab5/QueueSystemExponentialDistributionFiniteQueueSingleServer3RunsProbLoss.png} \\
+	 					
+	 					
+	 			\subsection{Uniform Distributed Service Time}
+	 			\includegraphics[scale=0.6]{Lab5/QueueSystemUniformDistributionFiniteQueueSingleServer3Runs.png} \\
+	 			Also for the Uniform distribution service time, the average waiting time converges for any value of LOAD to a specific value. This value is $queue\_time = B \times\frac{SERVICE}{2}$ since the mean value of a Uniform distribution (U(a,b)) is $E(x)=\frac{(b-a)}{2}$; in this case a is 0 and b is the SERVICE time. with an unlimited queue length the average waiting time would diverge for any $LOAD \ge 2$.
+	 			
+	 		\includegraphics[scale=0.6]{Lab5/QueueSystemUniformDistributionFiniteQueueSingleServer3RunsProbLoss.png} \\
+	 			
+	 			
+	 			
+	 			\section{Multiple-Server queuing system}
+	 			\subsection{Exponential Distributed Service Time}
+	 					%\includegraphics[scale=0.6]{Lab5/QueueSystemExponentialDistributionFiniteQueueSingleServer3RunsProbLoss.png} \\
+It is possible to see that the average waiting time converges for any value of LOAD to a specific value. This value is $queue\_time = B \times SERVICE$, where B is the maximum value of allowed client in the system and SERVICE is the average time spent in a server. \\
+It is worth to mention that with an unlimited queue length the average waiting time would diverge for any $LOAD \ge 1$.
+
+						
+	 			\subsection{Uniform Distributed Service Time}
+	 		%\includegraphics[scale=0.6]{Lab5/QueueSystemUniformDistributionFiniteQueueSingleServer3RunsProbLoss.png} \\
+	 			Also for the Uniform distribution service time, the average waiting time converges for any value of LOAD to a specific value. This value is $queue\_time = B \times\frac{SERVICE}{2}$ since the mean value of a Uniform distribution (U(a,b)) is $E(x)=\frac{(b-a)}{2}$; in this case a is 0 and b is the SERVICE time. with an unlimited queue length the average waiting time would diverge for any $LOAD \ge 2$.
+	 			
+						
+						
 } \fi
 
 
@@ -115,15 +180,16 @@
 	 
 	\section{Introduction}
 	 
-	This experiment involves a number \emph{N} of bins and balls: for each ball we choose random bins, one or more than one, depending on the dropping policy, and we put the ball in one of those bins. The goal is to evaluate the maximum occupancy of the bins and compare the results with the theoretical ones. There are 2 dropping policy:
+	This experiment involves a number \emph{N} of bins and balls: for each ball random bins are chosen, one or more than one, depending on the dropping policy; given those bins a ball is put in one of them.	The goal is to evaluate the maximum occupancy of the bins and compare the results with the theoretical ones. \\
+	 There are 2 dropping policy:
 	\begin{itemize}
-		\item Random Dropping: for each ball we choose a random bin and we put the ball in it; 
-		\item Random Load Balancing: for each ball we choose \emph{d} random bins and we fill the one with a lower occupancy. In this simulation the values of \emph{d} used are 2 and 4.
+		\item Random Dropping: for each ball a single random bin is chosen and the ball is put in it; 
+		\item Random Load Balancing: for each ball \emph{d} random bins are chosen and only the ball is put in the one with the lowest occupancy. In this simulation the values of \emph{d} used are 2 and 4.
 	\end{itemize}
 
 	\section{Tasks}
 	 
-		\subsection{Define all the input parameters of the simulator}
+		\subsection{Input Parameters}
 			The input parameters of the simulation are:
 			\begin{itemize}
 				\item Number N of bins and balls;
@@ -132,12 +198,10 @@
 				\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results.
 			\end{itemize}
 			 
-	\subsection{Define all the output metrics of the simulator}
+	\subsection{Output Metrics}
 			The output metrics of the simulation are:
 			\begin{itemize}
 				\item Number N of bins and balls;
-				\item The theoretical lower bound value;
-				\item The theoretical upper bound value;
 				\item The lower confidence interval value;
 				\item The average max occupancy value;
 				\item The upper confidence interval value;
@@ -145,10 +209,10 @@
 			\end{itemize}
 			All these value are stored in a file and each field is tab separated.
 	
-	\subsection{Define the main data structures for the simulator}
-			The data structure used is an array where to store the bin occupancy at position \emph{i}. This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$).
+	\subsection{Main data structure}
+			The data structure used is an array of integers. This array has length $num\_bins$ and it stores the bin occupancy at position \emph{i}. This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$).
 			
-	\subsection{Describe the architecture of the simulator in terms of source files and output files}
+	\subsection{Simulator Inputs \& Outputs}
 			The whole simulation runs inside a script where the simulator runs multiple times for multiple values of bins and balls. \\
 			The output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of bins and balls used. This .dat file is then elaborated by scripts in order to create some plots. There are 3 scripts for plotting:
 			\begin{itemize}
@@ -157,51 +221,45 @@
 				\item One plots the relative errors for different values of the number of runs.
 			\end{itemize}
 			
-			\subsection{For the random dropping policy, show the coherence of the simulation results with the theoretical bounds, for N in [100; 10\textsuperscript{6}]. Show the effect of varying the number of runs for each experiment on the relative error}
+			\subsection{Coherence Simulation \& Theoretical Formula}
 			
-			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns3.png} \\
-			It is possible to see that 3 runs are not enough since the confidence interval is not inside the theoretical values.
+			\noindent
+			
+			\includegraphics[width = 0.45\textwidth]{Lab1/RandomDroppingPolicyRuns3.png} \\
+			It is possible to see that 3 runs are not enough since the confidence interval is not inside the theoretical values. \\
 			The lower bound is calculated using the formula:
 			
 			\begin{equation} \label{eq:1}
-				 \text{max\_occupacy = }\frac{\log n}{\log \log n} 
+				 \text{max\_occupancy = }\frac{\log n}{\log \log n} 
 			\end{equation}
-			\begin{center}
-					where \emph{n} is the number of bins and balls.
-			\end{center}
-			While the upper bound is just 3 times this formula.
-			
-			\includegraphics[scale=0.6]{Lab1/RandomDroppingPolicyRuns5.png} \\
+			where \emph{n} is the number of bins and balls,\\
+			while the upper bound is just 3 times this formula.
+						
+			\includegraphics[width = 0.45\textwidth]{Lab1/RandomDroppingPolicyRuns5.png} \\
 			It is possible to see that 5 runs are enough since the confidence interval is inside the theoretical values.
-			
-			\vspace{20px}
-			
-			\includegraphics[scale=0.6]{Lab1/RandomLoadBalancingd2Runs3.png} \\
+						
+			\includegraphics[width = 0.45\textwidth]{Lab1/RandomLoadBalancingd2Runs3.png} \\
 			Even with 3 runs the Load Balancing with \emph{d=2} is near to the theoretical value.
 			\begin{equation} \label{eq:2}
-				 \text{max\_occupacy = }\frac{\log \log n}{\log d}
+				 \text{max\_occupancy = }\frac{\log \log n}{\log d}
 			\end{equation}
-			\begin{center}
-					where \emph{n} is the number of bins and balls and \emph{d} the number of random bins chosen.
-			\end{center}
-			It is possible to see that this formula is much smaller than formula \ref{eq:1}, so we expect a lower occupacy value.
+			Where \emph{n} is the number of bins and balls and \emph{d} the number of random bins chosen. \\
+			It is possible to see that this formula is much smaller than formula \ref{eq:1}, so we expect a lower occupancy value.
 			
-			\vspace{20px}
-			
-			\includegraphics[scale=0.6]{Lab1/RandomLoadBalancingd4Runs3.png} \\
+			\includegraphics[width = 0.45\textwidth]{Lab1/RandomLoadBalancingd4Runs3.png} \\
 			Even with 3 runs the Load Balancing with \emph{d=4} is quite near to the theoretical value. 
 			It is possible to see that the average occupacy is lower with respect to the Load Balancing with \emph{d=2} (The 2 plots have the same y-axis scale).
 			
-			\includegraphics[scale=0.6]{Lab1/ComparisonamongPolicies,Runs=5.png} \\
-			With this graph it is possible to see the differences between the policies and in particular: the Balacing policy works better than the Random one and that with an increasing number of bins selected the maximum occupancy decreases. \\ There must be a trade-off between the number of bins selected and the script execution time because with large values of \emph{d} the occupancy decreases but the execution time increases: in the extreme case with \emph{d=\#bins} we would put the ball in the least occupied bins (equal to execute \emph{np.argmin(bins)}) and have an average maximum occupancy of 1 (one ball in each bin)  but that would require some time, especially for large number of bins.
+			\includegraphics[width = 0.45\textwidth]{Lab1/ComparisonamongPolicies,Runs5.png} \\
+			With this graph it is possible to see the differences between the policies and in particular: the Balacing policy works better than the Random one and that with an increasing number of bins selected the maximum occupancy decreases. \\ There must be a trade-off between the number of bins selected and the script execution time because with large values of \emph{d} the occupancy decreases but the execution time increases: in the extreme case with \emph{d=\#bins} we would put the ball in the least occupied bins (similar to execute \emph{np.argmin(bins)}) and have an average maximum occupancy of 1 (one ball in each bin)  but that would require some time, especially for large number of bins.
 			
-			\includegraphics[scale=0.6]{Lab1/RelativeErrorsRandomDroppingPolicy.png} \\
+			\includegraphics[width = 0.45\textwidth]{Lab1/RelativeErrorsRandomDroppingPolicy.png} \\
 			It is possible to see that the relative errors decrease with increasing the number of runs. 
 			\begin{equation}\label{eq:3}
 				 \text{rel\_error = }2\frac{\Delta}{x}
 			\end{equation}
 			\begin{center}
-					where $\Delta$ is the \emph{CI} length.
+					where $\Delta$ is the half the \emph{CI} length.
 			\end{center}
 			Similar results are obtained with the Loading Balancing policy; graphs are omitted.
 					
@@ -210,25 +268,26 @@
 	 
 	 \section{Introduction}
 	 
-	This experiment involves a number \emph{m} people: for each person a random number, the birthday in the case of Birthday Paradox, is chosen among \emph{n} possible values. The goal is to evaluate:
+	This experiment involves a number \emph{m} people: for each person a random number, the birthday in the case of Birthday Paradox, is chosen among \emph{n} possible values. \\
+	The goal is to evaluate:
 	\begin{itemize}
-		\item The probability of conflict. A conflict is experienced two people have the same random number (same birthday);
+		\item The probability of conflict. A conflict is experienced when two people have the same random number (same birthday);
 		\item The minimum number of people required for a conflict.
 	\end{itemize}
 
 	\section{Tasks}
 	 
-		\subsection{Define all the input parameters of the simulator}
+		\subsection{Input Parameters}
 			The input parameters of the simulation are:
 			\begin{itemize}
 				\item Number of possible ``days'': in this simulation, this value can be: [365, $10^5$, $10^6$];
-				\item The seed value used to initialize a pseudorandom number generator;
+				\item The seed value used to initialize the pseudorandom number generator;
 				\item The confidence level used to calculate the confidence interval;
 				\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate results;
 				\item A flag depending if we want to calculate the conflict probability or the minimum number of people needed to experience a conflict.
 			\end{itemize}
 			 
-	\subsection{Define all the output metrics of the simulator}
+	\subsection{Output Metrics}
 			The output metrics of the simulation are:
 			\begin{enumerate}
 					\item Conflict Probability:
@@ -242,7 +301,7 @@
 					\item Minimum number of people:
 					\begin{itemize}
 							\item The lower confidence interval value;
-							\item The average max occupancy value;
+							\item The average number of people;
 							\item The upper confidence interval value;
 							\item The relative error;
 							\item The theoretical value.
@@ -250,59 +309,61 @@
 			\end{enumerate}
 			All these value are stored in a file and each field is tab separated.
 	
-	\subsection{Define the main data structures for the simulator}
-				The data structure used is a binary array to store whether the element (day in the case of Birthday Paradox) at position \emph{i} is occupied or not (0 means free, 1 means occupied: in the case of Birthday Paradox, in that day there is already, at least, one person who was born in that day). \\ This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$). \\
-				For the calculation of the probability there is a counter that keeps how many conflicts happened. This is used to calculate the probability as $prob(conf)=\frac{\#conflicts}{\#people}$ at each run. \\
+	\subsection{Main Data Structures}
+				The data structure used is a binary array to store whether the element (birthday) at position \emph{i} is occupied or not (in the case of Birthday Paradox, there is already, at least, one person who was born in that day). \\ This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$). \\
+				For the calculation of the probability there is a counter that keeps how many conflicts happened for a given number of people. This is used to calculate the probability as $prob(conf)=\frac{\#conflicts}{\#people}$ at each run. \\
 				%For the minimum number of people there is a an array storing the minimum number of people for a conflict at each run.
 			
-	\subsection{Describe the architecture of the simulator in terms of source files and output files}
-			The whole simulation runs inside a script where the simulator runs multiple times for multiple values of people or just one in the case of finding the minimum number of people for a conflict. \\
-			At each iteration the output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of people or just one line in the case of minimum case. This .dat file is then elaborated by a script to create the plots.
+	\subsection{Simulator Inputs \& Outputs}
+			The whole simulation runs inside a script. The simulator runs each time for different values of people or just one in the case of finding the minimum number of people for a conflict. \\
+			At each iteration the output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of people or just one line in the case of minimum case. This first .dat file is then elaborated by a script to create the plots.
 		
-		\subsection{Show the graph comparing the conflict probability with respect to the theoretical value,
-for each value of m.}
-				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays365andRuns200.png} \\
-				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays100000andRuns250.png} \\
-				The results obtained with 200 runs were not satisfying so the number of runs is increased to 250. \\
-				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays1000000andRuns250.png} \\
-				Even with 180 runs the simulation is not very close to the theoretical result. \\
-				\includegraphics[scale=0.6]{Lab2/ProbabilityConflictDays1000000andRuns600.png} \\
-				Better results can be obtained increasing a lot the number of runs but such a huge number of runs requires more time to be executed.
+		\subsection{Coherence simulation \& theoretical formula}
+				\includegraphics[width = 0.45\textwidth]{Lab2/ProbabilityConflictDays365Runs250.png} \\
+				\includegraphics[width = 0.45\textwidth]{Lab2/ProbabilityConflictDays100000Runs250.png} \\
+				\includegraphics[width = 0.45\textwidth]{Lab2/ProbabilityConflictDays1000000Runs250.png} \\
+				For $10^6$ case, even with 250 runs the simulation is not very close to the theoretical result. \\
+				\includegraphics[width = 0.45\textwidth]{Lab2/ProbabilityConflictDays1000000Runs600.png} \\
+				Better results can be obtained increasing the number of runs but such a huge number of runs requires more time to be executed.
 				
 		\subsection{Is the theoretical formula for the conflict probability accurate?}
 				Yes, how it can be seen from the previous graphs, the formula is accurate but for large number of days it is less accurate and it requires an higher number of runs.
+				\includegraphics[width = 0.45\textwidth]{Lab2/RelativeErrorDays100000Runs250.png} \\
+				It is possible to see the accuracy of the theoretical formula through the relative errors plot that the they tend to 0.
 				
-		\subsection{Is it possible to estimate a-priori the range of m such that the probability in the graph covers all the range in [0; 1]?}
+				
+		\subsection{Required elements given a priori probability}
 				Yes, it is possible using the following formula:
 				\[
 						num\_elements \: = \: \sqrt{2 \times number\_days \times \log{ \left( \frac{1}{1-p} \right) } }
 				\]
-				\begin{center}
-							where \emph{p} is the wanted probability, $ p \in [0,1)$.
-				\end{center}
+							where \emph{p} is the wanted probability, $ p \in [0,1)$. \\
+							
 		With this formula it is possible to find all values of \emph{m} given a value of \emph{p}, the only value non possible to find is \emph{p=1} since this is not allowed in the formula (division by 0) but we have $100\%$ probability of conflict if $number\_days+1$ elements (people) are chosen.
 		
-		\subsection{Fill the following table and comment about the accuracy of the theoretical formula.}
+		\subsection{Summary Results}
 				\begin{table}[h]
+				\renewcommand{\arraystretch}{1.05}
+				  \resizebox{0.5\textwidth}{!}{%
 							\centering
 							%|l|l|l|l|l|l|
 							\begin{tabular}{|c|c|c|c|c|c|c|}
 							\hline
 							\multicolumn{1}{|c|}{\textbf{n}} & 
-							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}\# runs\end{tabular}}} & 
-							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Average number of people\\ needed for a conflict\end{tabular}}} & 
-							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}95\% confidence\\ intervals\end{tabular}}} & 
-							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Theoretical\\ value\end{tabular}}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}num\\runs\end{tabular}}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Avg num\\people for\\a conflict\end{tabular}}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}95\%\\CI\end{tabular}}} & 
+							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Theo.\\ value\end{tabular}}} & 
 							\multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}MAE\end{tabular}}}\\ \hline
 							%							days				runs								simul												CI						theor										MAE
-							\textbf{365}            & 200 		& 22.64									& 1.63      & 23.94									& 1.30										 					\\ \hline
-							\textbf{100000}       &	250			& 401.72       & 27.13    & 396.33      	& 5.39								\\ \hline
-							\textbf{1000000}     &	250			& 1154.26     & 79.76				&	1253.31      & 99.05							\\ \hline
-							\textbf{1000000}     &	400			& 1253.31     & 63.19			&	1253.31      & 53.76							\\ \hline
+							\textbf{365}           										 & 250 			& 22.73						& 1.44      & 23.94							& 1.21				\\ \hline
+							\textbf{10\textsuperscript{5}}   &	250			& 401.72       & 27.13    	& 396.33      	& 5.39								\\ \hline
+							\textbf{10\textsuperscript{6}}   &	250			& 1154.26     & 79.76				&	1253.31      & 99.05							\\ \hline
+							\textbf{10\textsuperscript{6}}   &	600			& 1230.41     & 51.70				&	1253.31      & 22.90							\\ \hline
 							\end{tabular}
+					}
 				\end{table}
 			The number of runs are chosen such that the relative errors (\ref{eq:3}) were under $0.15$ but in case of $10^6$ days the relative error is a bit smaller than the others ($0.11$ vs $0.14$) since with $250$ runs the MAE value was greater than the CI value.
-
 } \fi
 			
 			
