@@ -4,26 +4,33 @@ from scipy.stats import t
 import sys
 import math 
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--ind_day', type=int, choices=[0,1,2], help='Index of the days: (0:365, 1:10**5, 2:10**6)', required=False, default=0)
+parser.add_argument('--runs', type=int, help='Number or runs: (r>1)', required=False, default=3)
+parser.add_argument('-isMin', action='store_true')
+args = parser.parse_args()
+
 # initial settings
 initial_seed = 2500
 confidence_level = 0.95
 
 #Index for the number of days required: 0:365, 1:10**5, 2:10**6
-index_day = int(sys.argv[1])
+index_day = args.ind_day
 possible_days = [365, 10**5, 10**6]
 number_days = possible_days[index_day]
 
-runs = int(sys.argv[2]) # number of runs
+runs = args.runs # number of runs
 #True -> find probability of conflict
 #False -> find minimum number of people needed to experience a collision
-isProb = False
+isProb = False if args.isMin else True
 
 
 if(isProb):
 	#Calculate lower and upper bounds using the theoretical formula
 	people_lower_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.05))) )#The lower bound is calculated with probability 0.05
 	people_upper_bound = int( math.sqrt(2*number_days*math.log(1/(1-0.95))) )#The upper bound is calculated with probability 0.95
-	#Use a step increasing with the number of days (index_day in [0,1,2])
+	#Use a increasing step with the number of days (index_day in [0,1,2])
 	step = int((people_upper_bound - people_lower_bound) / 20 + 5*index_day)
 	number_persons = range(people_lower_bound,people_upper_bound,step)
 
@@ -38,10 +45,10 @@ if(isProb):
 	elif(index_day == 2):
 		number_persons = range(people_lower_bound,people_upper_bound,60)
 	'''
-else:
+# Otherwise:
 	#Loop only once in the case of min # of person for a conflict
 	#In case of isProb = False we would not need the for loop(for p in number_persons: ...), just one iteration
-	number_persons = [0]
+	# number_persons = [-1]
 
 
 #Print Input Parameters
@@ -72,15 +79,14 @@ def evaluate_conf_interval(x):
 		stddev = x.std(ddof=1) # std dev
 		ci = t_sh * stddev / np.sqrt(runs) # confidence interval half width
 
-	#print(ave, stddev, t_sh, runs, ci, ave)
-	rel_err = ci / ave # if ave>0 else # relative error
+	rel_err = ci / ave
 	return ave, ci, rel_err
 
 def run_simulator(pers): # run the birthday paradox model
 	random.seed(a=initial_seed) # reset initial seed
 	#Counter that counts if in a given run a conflict occured (confli_value++)
 	#This can be achieve with an array (confli_value=[]) and if a conflict occured at run r set confli_value[r]=True
-	#And then count the number of True values. Using a counter avoids using an array
+	#And then count the number of True values. Using a counter avoids the use of an array
 	confli_value = 0 
 
 	#This case is for the minimum value case
@@ -91,7 +97,7 @@ def run_simulator(pers): # run the birthday paradox model
 		#True: at least one person has birthday in day i
 		birthday = np.full(number_days, False)
 
-		#This variable is for the minimun # of people for a conflict case
+		#This variable is for the minimun # of people for a conflict case, isProb=False
 		conflict_number = -1
 
 		#The maximum number of iteration changes depending on the value of isProb
@@ -99,7 +105,8 @@ def run_simulator(pers): # run the birthday paradox model
 		max_value_iter = pers if isProb else number_days+1
 		for i in range(max_value_iter): # for each person
 			d = random.randrange(number_days) #get random day
-			if(birthday[d]==True): #Conflict
+			if(birthday[d]==True): 
+				#Conflict
 				conflict_number = i
 				break #Exit the for loop
 			birthday[d]=True #No conflict, set birthday[d] to True
@@ -129,13 +136,17 @@ if(isProb):
 else:
 	print("ciLow\tave\tciHigh\tRelErr\tTheoreticValue",file=datafile)
 
-for p in number_persons: # for each number of days and persons
-	if(isProb):
+if(isProb):
+	for p in number_persons: # for each number of days and persons
 		print(f"Running with #persons {p}")
-	out_run=run_simulator(p) # get the output results of a run
+		out_run=run_simulator(p) # get the output results of a run
+		print(*out_run,sep="\t",file=datafile) # write on a file
+else:
+	out_run=run_simulator(-1) #Can be any number it is not used
 	print(*out_run,sep="\t",file=datafile) # write on a file
+
 datafile.close() # close the file
 
 import os
-if(isProb): 
-	os.system(f"python PlotResultsProb.py {number_days} {runs}")  
+if(isProb):
+	os.system(f"python PlotResultsProb.py --ind_day {index_day} --runs {runs}")  
