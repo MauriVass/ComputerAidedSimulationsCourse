@@ -1,0 +1,23 @@
+Laboratory #3
+
+-Fingerprint
+There is only one script: Fingerprint.py. The only requirement (same for the other scripts) is the presence of the file with the English words
+with the name words_alpha.txt in this folder (./words_alpha.txt) (Link: https://github.com/dwyl/english-words/blob/master/words_alpha.txt)
+
+-Bit String Array & Bloom filter
+There is one simulations script (BTA_BF.py) and 3 plotting scripts (PlotResults.py, PlotResultsBFq10.py, PlotResultsBFq11.py).
+
+The BTA_BF.py can take 3 command line arguments:
+  dataS: Data Structure to be used: 0:bit string array, 1:simple bloom filter
+  runs: the number of runs
+  words: Number words used for checking collisions (only for bloom filter)
+Example: BitStringArray.py --dataS 0 --runs 2 --words 30000
+
+BTA_BF.py output is a .dat file that is elaborated by PlotResults.py script
+The PlotResults.py must take 1 command line arguments:
+  Data Structure to be used: 0:bit string array, 1:simple bloom filter
+Example: PlotResults.py 0 (or 1)
+
+PlotResultsBFq10.py plot a graph for the q10. It does not require inputs.
+
+PlotResultsBFq11.py plot a graph for the q11. It does not require inputs.

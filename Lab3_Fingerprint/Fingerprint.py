@@ -5,26 +5,6 @@ from pympler import asizeof
 import numpy as np
 from scipy.stats import t
 
-# words = []
-# mem = 0
-# print(f'mem empty list: {asizeof.asizeof(words)}')
-# length = 20
-# for i in range(length):
-# 	for _ in range(1000):
-# 		word = 'a'*i
-# 		words.append(word)
-# 		mem += asizeof.asizeof(word)
-# 		mem_word = asizeof.asizeof(word)
-# 		mem_list = asizeof.asizeof(words)
-# 		diff = np.abs(mem-mem_list)
-# 		#spaces = ' '*(length-i)
-# 		overhead = (diff/mem)*100
-# 		#All values are in bytes
-# 		print(f'Word chars: {i}, Mem word: {mem_word}, cumul mem words: {mem}, mem list: {mem_list}, diff: {diff}, overhead: {overhead:.1f}%')
-# #Simple code that shows the differences between the expected memory( sum(words*#bits) ) and the memory used by python
-# #Python list adds a huge overhead for each word!
-# exit()
-
 file = open('words_alpha.txt','r')
 words_set = set()
 mem = 0
@@ -47,6 +27,7 @@ end_loop = False
 #to understand if this value can be found with the given value of max_num_bits (max_num_bits is not too small)
 min_found = np.Inf
 min_storage_length = -1
+#Temporary variable
 min_fingerprint_table = set()
 
 print('\nSimulation')
@@ -80,7 +61,7 @@ while(end_loop is False): #Loop until no conflict is found with the given b^exp 
 		h = word_hash_int % storage_length
 
 		if(h in fingerprint_table): #Conflict
-			print(f'{num_bits} #bits are NOT enough')
+			print(f'{num_bits} bits are NOT enough')
 			#A conflit is found this means that the number of bits must be increased
 			min_num_bits = num_bits 
 			conflictHappened = True
@@ -101,7 +82,7 @@ while(end_loop is False): #Loop until no conflict is found with the given b^exp 
 
 	#Stop searching condition: no integer number between min and max
 	if((max_num_bits - min_num_bits)/2<1):
-		print('End loop. Min found: ', min_found)
+		print('End loop. Min number bit found found: ', min_found)
 		#Restore variables with the right value of bits
 		num_bits = min_found
 		storage_length = min_storage_length
@@ -128,10 +109,10 @@ b_teo_ceil = math.ceil(b_teo)
 print(f'Ratio Simulated and Theoretical number of bits: {num_bits}/{b_teo_ceil}={(num_bits/b_teo_ceil):.2f}')
 
 ###	Min theoretical required memories ###
-#The average english words length is 4.7 characters (1 char = 8 bits)
+#The average english words length is 4.79 characters (1 char = 8 bits)
 #Formula: total_size_Byte = number_words * bits_for_word / 8 bits
 theoretical_size_fpt = number_words * num_bits / 8.0
-theoretical_size_word_set = number_words * 4.7 # equivalent to 36.7 bits
+theoretical_size_word_set = number_words * 4.79 # equivalent to ~38.32 bits
 
 ### Memory to store the fp table and the set	###
 #asizeof returns the size in Bytes
@@ -161,7 +142,13 @@ def evaluate_conf_interval(x):
 initial_seed = 2500
 confidence_level = 0.95
 n_runs = 3
-number_words_checkcollision = 5000000
+number_words_checkcollision = 5 * 10**6
+print("\nInitial seed: ",initial_seed)
+print("Confidence level: ",confidence_level)
+print("Number of runs: ",n_runs)
+print("Number words used for checking collisions: ",number_words_checkcollision)
+
+#Store the value of probability of false positive for each run
 prob_collision_fp = np.zeros(n_runs)
 prob_collision_set = np.zeros(n_runs)
 
@@ -169,12 +156,12 @@ for r in range(n_runs):
 	num_collision_fp = 0
 	num_collision_set = 0
 	for i in range(number_words_checkcollision):
-		#Generate 'fake' word hash(es). Fake because they are just rnd number between [0,n)
+		#Generate 'fake' word hash(es). Fake because they are just ~rnd number between [0,n)
 		word_hash = generateWord(storage_length)
 		#Check if the word is present but it should not
 		isPresent_fp = word_hash in fingerprint_table
 		isPresent_set = word_hash in words_set
-		#print(word_index,bit_string_array[word_index],isPresent)
+
 		#If present is True it means the the fake word is present
 		if(isPresent_fp):
 			num_collision_fp+=1
@@ -182,6 +169,8 @@ for r in range(n_runs):
 			num_collision_set+=1
 	prob_collision_fp[r] = num_collision_fp/number_words_checkcollision
 	prob_collision_set[r] = num_collision_set/number_words_checkcollision
+# print(prob_collision_fp) #The result is something like this: [4.e-07 4.e-07 0]
+# print(prob_collision_set) #[0. 0. 0.]
 
 ave_fp, ci_fp, rel_err_fp = evaluate_conf_interval(prob_collision_fp)
 ave_set, ci_set, rel_err_set = evaluate_conf_interval(prob_collision_set)
