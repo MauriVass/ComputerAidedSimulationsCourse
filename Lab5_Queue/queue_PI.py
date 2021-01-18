@@ -1,7 +1,15 @@
-
 import numpy as np
 import simpy
 from scipy.stats import t
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--task', type=int, help='Number of task', choices=[1,2,3], required=False, default=1)
+parser.add_argument('--servt', type=str, help='Service Time: [Exp, Uni]', choices=['Exp','Uni'], required=False, default='Exp')
+parser.add_argument('--maxcap', type=int, help='Maximum system capacity (-1:np.inf)', required=False, default=-1)
+parser.add_argument('--nserv', type=int, help='Number of services (>0)', required=False, default=1)
+parser.add_argument('--servpoli', type=int, help='Server Policy', required=False, default=1)
+args = parser.parse_args()
 
 def evaluate_conf_interval(x):
 	t_sh = t.ppf((confidence_level + 1) / 2, df=n_runs - 1) # threshold for t_student
@@ -100,11 +108,18 @@ def arrival_process(environment,queue):
 		if(users <= number_services):
 			#Get the first free service
 			free_servers = [x for x in servers if x.busy==0]
-			# print(free_servers)
-			# t.sleep(1)
+
 			#Check if at least one server is free
 			if(len(free_servers)>0):
-				server = free_servers[0] #index_services[something]
+				if(server_policy==1):
+					#Get random server
+					index = np.random.randint(0,len(free_servers))
+				elif(server_policy==2):
+					#Get fastest server
+					serv_times = [x.service_time for x in free_servers]
+					index = np.argmin(serv_times)
+
+				server = free_servers[index] #index_services[something]
 				#Set the server as busy
 				server.busy = 1
 				env.process(departure_process(env,server,queue))
@@ -180,54 +195,83 @@ SIM_TIME = 200000 # condition to stop the simulation
 #TASK 1
 #Exponential distributed service time or
 #Uniform distributed service time
-exp_service_time = False
+exp_service_time = True if args.servt=='Exp' else False
 #TASK 2
 #Infinite of finete system capacity
-system_capacity = 5 # 5, 10, 15, 20
+system_capacity = np.inf if args.maxcap==-1 else args.maxcap# 5, 10, 15, 20
 #TASK 3
 #Multi server
-number_services = 1
+number_services = args.nserv
+#How to choose a server (fastest, ...)
+server_policy = args.servpoli
 
-task = 2
+#The task to be performed
+task = args.task
 
-for system_capacity in [5,10]:
-	queue_file = open(f"queue{task}_{exp_service_time}_B{system_capacity}.dat", "w")
-	print("LOAD\tciWT\taveWT\trel_errWT\tthWTime\tciLoad\taveLoad\trel_errLoad\tciLoss\taveLoss\trel_errLoss",file=queue_file)
+
+# for system_capacity in [5,10,15,20]: #Semi-manual loop for task 2
+for number_services in [2,4,6,8,10]: #Semi-manual loop for task 3
+# if(True):
+	queue_file = open(f"queue{task}_{exp_service_time}_B{system_capacity}_S{number_services}_P{server_policy}.dat", "w")
+	print("LOAD\tciWT\taveWT\trel_errWT\tthWT\tciLoad\taveLoad\trel_errLoad\tciLoss\taveLoss\trel_errLoss",file=queue_file)
 
 	# Initialize the random number generator
 	np.random.seed(42)
-	#Not interesting result for small values of load
-	loads = np.arange(0.5,1,0.25)
-	#loads = np.append(loads,0.98)
-	loads = np.append(loads,np.arange(1,10.01,1))
-	print(loads)
-	for l in loads: #[12:]
-		LOAD = l  # load of the queue
 
-		#For task 1
+	#Not interesting result for small values of load
+	if(task==1):
+		loads = np.arange(0.25,1,0.05)
+		loads = np.append(loads,0.98)
+	elif(task==2):
+		loads = np.arange(0.3,1,0.25)
+		loads = np.append(loads,np.arange(1,10.01,1))
+	elif(task==3):
+		loads = np.arange(0.3,1.01,0.1)
+	print(loads)
+
+	for l in loads: #[12:]
+		if(task==3):
+			LOAD = l * number_services  # load of the queue
+		else:
+			LOAD = l
+
+		SERVICE = 10 # av service time
+		ARRIVAL = SERVICE/LOAD # av. inter-arrival time
+		TYPE1 = 1 # At the beginning all clients are of the same type, TYPE1
+
+		#Coefficient of variation squared C^2_s
+		if(exp_service_time):
+			service_rate = 1/SERVICE #[s^-1]
+			mean_service_time = SERVICE #[s]
+			coef_variation = 1
+		else:
+			service_rate = 1/(SERVICE/2)
+			mean_service_time = SERVICE/2
+			var_service = (1.0/12.0) * SERVICE**2
+			coef_variation = var_service/(mean_service_time**2)
+			# print(coef_variation)
+		# lambda/mu/m = LOAD
+		ro = (1/ARRIVAL)/(service_rate)/number_services
+
 		average_queue_times = np.zeros(n_runs)
-		average_losses = np.zeros(n_runs)
+		prob_losses = np.zeros(n_runs)
 		average_server_util = np.zeros(n_runs)
 
 		for r in range(n_runs):
 			print(f'Load: {l}, Run: {r}')
 			servers = []
-			SERVICE = 10 # av service time
-			#Get services time form an uniform distribution around SERVICE time
-			#services = np.random.uniform(low=SERVICE-2, high=SERVICE+2, size=number_services)
-			#Set manually to have more control
+
+			#Genarate services
 			for i in range(number_services):
-				servers.append(Server(SERVICE))
+				if(server_policy==1):
+					service = SERVICE
+				elif(server_policy==2):
+					#Assign services time such that the average if SERVICE (at least for large number of servers)
+					service = np.random.uniform(low=SERVICE-3, high=SERVICE+3)
 
-			ARRIVAL = SERVICE/LOAD # av. inter-arrival time
-			TYPE1 = 1 # At the beginning all clients are of the same type, TYPE1
+				servers.append(Server(service))
 
-			# ******************************************************************************
-			# Initialization
-			# ******************************************************************************
-			#
 
-			#arrivals=0
 			# State variable: number of users
 			users=0
 			line_users = 0
@@ -249,21 +293,6 @@ for system_capacity in [5,10]:
 			# Print outputs
 			# ******************************************************************************
 
-			#Coefficient of variation squared C^2_s
-			if(exp_service_time):
-				service_rate = 1/SERVICE #[s^-1]
-				mean_service_time = SERVICE #[s]
-				coef_variation = 1
-			else:
-				service_rate = 1/(SERVICE/2)
-				mean_service_time = SERVICE/2
-				var_service = (1.0/12.0) * SERVICE**2
-				coef_variation = var_service/(mean_service_time**2)
-				# print(coef_variation)
-			# lambda/mu = LOAD
-			ro = LOAD
-			ro = (1/ARRIVAL)/(service_rate)
-
 			if(debug):
 				print("\n\n\n","*"*10,"  VALUES  ","*"*10)
 				print('LOAD = ',LOAD)
@@ -274,8 +303,8 @@ for system_capacity in [5,10]:
 				print("*"*40)
 
 				print("\n\n","*"*10,"  MEASUREMENTS  ","*"*10)
-				losses = data.arr-data.dep-users
-				average_losses[r] = losses
+				losses = data.arr-(data.dep+users)
+				prob_losses[r] = losses/(data.arr)
 				theorical_losts = data.arr * (1-ro)/(1-ro**(system_capacity+1))*(ro**system_capacity) if system_capacity<np.Inf else 0
 				print("No. of users in the queue at the end of the simulation:",users,\
 						"\nTot. no. of arrivals =",data.arr,"- Tot. no. of departures =",data.dep, \
@@ -326,11 +355,10 @@ for system_capacity in [5,10]:
 					print(f'Server: {i}, Utilization: {server_utilization}, Customers served: {s.customers}, Service Time: {s.service_time}')
 				print("*"*40)
 
-		if(task==1 or True):
-			aveWT, ciWT, rel_errWT = evaluate_conf_interval(average_queue_times)
-			aveLoad, ciLoad, rel_errLoad = evaluate_conf_interval(average_server_util)
-			aveLoss, ciLoss, rel_errLoss = evaluate_conf_interval(average_losses)
-			print(f'{LOAD}\t{ciWT}\t{aveWT}\t{rel_errWT}\t{theorical_queue_time}\t{ciLoad}\t{aveLoad}\t{rel_errLoad}\t{ciLoss}\t{aveLoss}\t{rel_errLoss}', file=queue_file)
+		aveWT, ciWT, rel_errWT = evaluate_conf_interval(average_queue_times)
+		aveLoad, ciLoad, rel_errLoad = evaluate_conf_interval(average_server_util)
+		probLoss, ciLoss, rel_errLoss = evaluate_conf_interval(prob_losses)
+		print(f'{l}\t{ciWT}\t{aveWT}\t{rel_errWT}\t{theorical_queue_time}\t{ciLoad}\t{aveLoad}\t{rel_errLoad}\t{ciLoss}\t{probLoss}\t{rel_errLoss}', file=queue_file)
 
 			# print(f'{LOAD}\t{ci}\t{ave}\t{rel_err}', file=queue_server_file)
 
@@ -338,5 +366,5 @@ for system_capacity in [5,10]:
 	# queue_server_file.close()
 
 import os
-# if(n_runs>=1):
-# 	os.system(f'python Plot.py {task} {exp_service_time} {system_capacity} {number_services}')
+if(task==1):
+	os.system(f'python Plot.py --task {args.task} --servt {args.servt} --maxcap {args.maxcap} --nserv {args.nserv} --servpoli {args.servpoli}')
