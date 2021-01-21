@@ -8,7 +8,7 @@ parser.add_argument('--task', type=int, help='Number of task', choices=[1,2,3], 
 parser.add_argument('--servt', type=str, help='Service Time: [Exp, Uni]', choices=['Exp','Uni'], required=False, default='Exp')
 parser.add_argument('--maxcap', type=int, help='Maximum system capacity (-1:np.inf)', required=False, default=-1)
 parser.add_argument('--nserv', type=int, help='Number of services (>0)', required=False, default=1)
-parser.add_argument('--servpoli', type=int, help='Server Policy', required=False, default=1)
+parser.add_argument('--servpoli', type=int, help='Server Policy', choices=[1,2], required=False, default=1)
 args = parser.parse_args()
 
 def evaluate_conf_interval(x):
@@ -105,7 +105,7 @@ def arrival_process(environment,queue):
 		# sample the time until the next arrival
 		inter_arrival = np.random.exponential(ARRIVAL, size=1)
 
-		if(users <= number_services):
+		if(line_users <= number_services):
 			#Get the first free service
 			free_servers = [x for x in servers if x.busy==0]
 
@@ -119,7 +119,7 @@ def arrival_process(environment,queue):
 					serv_times = [x.service_time for x in free_servers]
 					index = np.argmin(serv_times)
 
-				server = free_servers[index] #index_services[something]
+				server = free_servers[index]
 				#Set the server as busy
 				server.busy = 1
 				env.process(departure_process(env,server,queue))
@@ -185,11 +185,6 @@ def departure_process(environment,server, queue):
 # ******************************************************************************
 # Constants
 # ******************************************************************************
-
-confidence_level = 0.95
-n_runs = 3
-debug = True
-
 SIM_TIME = 200000 # condition to stop the simulation
 
 #TASK 1
@@ -198,7 +193,7 @@ SIM_TIME = 200000 # condition to stop the simulation
 exp_service_time = True if args.servt=='Exp' else False
 #TASK 2
 #Infinite of finete system capacity
-system_capacity = np.inf if args.maxcap==-1 else args.maxcap# 5, 10, 15, 20
+system_capacity = np.inf if args.maxcap==-1 else args.maxcap
 #TASK 3
 #Multi server
 number_services = args.nserv
@@ -208,10 +203,13 @@ server_policy = args.servpoli
 #The task to be performed
 task = args.task
 
+confidence_level = 0.95
+n_runs = 6 if server_policy==2 else 3
+debug = True
 
-# for system_capacity in [5,10,15,20]: #Semi-manual loop for task 2
-for number_services in [2,4,6,8,10]: #Semi-manual loop for task 3
-# if(True):
+for system_capacity in [5,10,15,20]: #Semi-manual loop for task 2
+# for number_services in [2,4,6,8,10]: #Semi-manual loop for task 3
+# if(True): #Avoid indent if the above are uncommented
 	queue_file = open(f"queue{task}_{exp_service_time}_B{system_capacity}_S{number_services}_P{server_policy}.dat", "w")
 	print("LOAD\tciWT\taveWT\trel_errWT\tthWT\tciLoad\taveLoad\trel_errLoad\tciLoss\taveLoss\trel_errLoss",file=queue_file)
 
@@ -226,7 +224,7 @@ for number_services in [2,4,6,8,10]: #Semi-manual loop for task 3
 		loads = np.arange(0.3,1,0.25)
 		loads = np.append(loads,np.arange(1,10.01,1))
 	elif(task==3):
-		loads = np.arange(0.3,1.01,0.1)
+		loads = np.arange(0.4,1.00,0.1) if exp_service_time else np.arange(0.4,2.09,0.2)
 	print(loads)
 
 	for l in loads: #[12:]
@@ -242,14 +240,19 @@ for number_services in [2,4,6,8,10]: #Semi-manual loop for task 3
 		#Coefficient of variation squared C^2_s
 		if(exp_service_time):
 			service_rate = 1/SERVICE #[s^-1]
+			#Mean of an Exp(lambda) is 1/lambda=SERVICE
 			mean_service_time = SERVICE #[s]
 			coef_variation = 1
 		else:
+			#Mean of the Uniform(0,B) is B/2
+			#In this case B=SERVICE=10
 			service_rate = 1/(SERVICE/2)
 			mean_service_time = SERVICE/2
+			# V(U(0,B)) = 1/12 B^2
 			var_service = (1.0/12.0) * SERVICE**2
 			coef_variation = var_service/(mean_service_time**2)
 			# print(coef_variation)
+
 		# lambda/mu/m = LOAD
 		ro = (1/ARRIVAL)/(service_rate)/number_services
 
@@ -293,6 +296,9 @@ for number_services in [2,4,6,8,10]: #Semi-manual loop for task 3
 			# Print outputs
 			# ******************************************************************************
 
+			losses = data.arr-(data.dep+users)
+			prob_losses[r] = losses/(data.arr)
+			theorical_losts = data.arr * (1-ro)/(1-ro**(system_capacity+1))*(ro**system_capacity) if system_capacity<np.Inf else 0
 			if(debug):
 				print("\n\n\n","*"*10,"  VALUES  ","*"*10)
 				print('LOAD = ',LOAD)
@@ -303,9 +309,6 @@ for number_services in [2,4,6,8,10]: #Semi-manual loop for task 3
 				print("*"*40)
 
 				print("\n\n","*"*10,"  MEASUREMENTS  ","*"*10)
-				losses = data.arr-(data.dep+users)
-				prob_losses[r] = losses/(data.arr)
-				theorical_losts = data.arr * (1-ro)/(1-ro**(system_capacity+1))*(ro**system_capacity) if system_capacity<np.Inf else 0
 				print("No. of users in the queue at the end of the simulation:",users,\
 						"\nTot. no. of arrivals =",data.arr,"- Tot. no. of departures =",data.dep, \
 						"\nMax number of user in line =",data.max_user, \
