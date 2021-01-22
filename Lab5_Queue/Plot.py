@@ -12,7 +12,7 @@ parser.add_argument('--task', type=int, help='Number of task', choices=[1,2,3], 
 parser.add_argument('--servt', type=str, help='Service Time: [Exp, Uni]', choices=['Exp','Uni'], required=False, default='Exp')
 parser.add_argument('--maxcap', type=int, help='Maximum system capacity (-1:np.inf)', required=False, default=-1)
 parser.add_argument('--nserv', type=int, help='Number of services (>0)', required=False, default=1)
-parser.add_argument('--servpoli', type=int, help='Server Policy', required=False, default=1)
+parser.add_argument('--servpoli', type=int, help='Server Policy', choices=[1,2], required=False, default=1)
 parser.add_argument('--ms_mc', type=int, help='Multiserver with Maxcapacity', required=False, default=1)
 args = parser.parse_args()
 
@@ -122,19 +122,16 @@ elif(task==3):
 			# plt.fill_between(x, lb, ub, alpha=0.2)
 			ax1.set_title(title)
 			ax1.legend(loc='best')
-			ax1.set_xlabel('Load')
+			ax1.set_xlabel('Load x m')
 			ax1.set_ylabel('Queue Delay [s]')
 			#For better visualization
 			ax1.set_ylim(-1,20)
 
-			title = title.replace(' ','').replace(',','').replace(':','')
-			save_title = (f'Images/{title}t{task}s{policy}')
-			fig1.savefig(save_title)
-			plt.show()
+		title = title.replace(' ','').replace(',','').replace(':','')
+		save_title = (f'Images/{title}t{task}s{policy}')
+		fig1.savefig(save_title)
+		plt.show()
 	else:
-		#Not interesting
-
-		colors = [(1,0,0),(0,1,0),(0,0,1),(1,0.5,0),(1,0,1),(0,1,1)]
 		fig1, ax1 = plt.subplots(figsize=(12, 6), dpi=80)
 		# fig2, ax2 = plt.subplots(figsize=(12, 6), dpi=80)
 		for b in [5,10,15,20]: #tested with 3 runs
@@ -151,7 +148,7 @@ elif(task==3):
 			ax1.fill_between(x, lb, ub, alpha=0.2)
 			ax1.set_title(title)
 			ax1.legend(loc='best')
-			ax1.set_xlabel('Load')
+			ax1.set_xlabel('Load x m')
 			ax1.set_ylabel('Queue Delay [s]')
 
 			# means = np.array(data['aveLoss'])

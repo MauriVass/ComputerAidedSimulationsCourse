@@ -3,13 +3,13 @@ There are present some output files (OutputFiles.zip) so that if want to run the
 commands to run simulation script:
 python Queue.py --task TASK --servt DISTRIBUTION --maxcap B --nserv m --servpoli P
 where:
-        TASK: is the task: 1:M/M/1, 2:MM1B, 3:MMBm;
+        TASK: is the task: 1:M/X/1, 2:MX1B, 3:MXBm; (X=M or G)
         DISTRIBUTION: is the service distribution: 'Exp', 'Uni';
         B: is the system capacity;
         m: the number of services;
         P: the server choosing policy: 1:Random server, 2:Fastest server
 
-commands to run plotting script (Plot.py):
+commands to run plotting script (Plot.py) with he given output files:
 -Task 1:  python Plot.py --task 1 --servt Exp
           python Plot.py --task 1 --servt Uni
 

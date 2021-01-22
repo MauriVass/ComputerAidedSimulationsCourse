@@ -207,9 +207,9 @@ confidence_level = 0.95
 n_runs = 6 if server_policy==2 else 3
 debug = True
 
-for system_capacity in [5,10,15,20]: #Semi-manual loop for task 2
+# for system_capacity in [5,10,15,20]: #Semi-manual loop for task 2
 # for number_services in [2,4,6,8,10]: #Semi-manual loop for task 3
-# if(True): #Avoid indent if the above are uncommented
+if(True): #Avoid indent if the above are uncommented
 	queue_file = open(f"queue{task}_{exp_service_time}_B{system_capacity}_S{number_services}_P{server_policy}.dat", "w")
 	print("LOAD\tciWT\taveWT\trel_errWT\tthWT\tciLoad\taveLoad\trel_errLoad\tciLoss\taveLoss\trel_errLoss",file=queue_file)
 
@@ -351,7 +351,7 @@ for system_capacity in [5,10,15,20]: #Semi-manual loop for task 2
 			# if(task==1):
 			server_utilization = servers[0].utilization/env.now
 			average_server_util[r] = server_utilization
-			if(debug):
+			if(debug or task==3):
 				print('\nServers utilization:')
 				for i,s in enumerate(servers):
 					server_utilization = s.utilization/env.now
