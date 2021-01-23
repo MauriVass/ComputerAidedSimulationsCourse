@@ -49,7 +49,7 @@
 }
 
 \newcounter{debug}
-\setcounter{debug}{1}
+\setcounter{debug}{2}
 
 %https://tex.stackexchange.com/questions/291307/how-to-hide-show-section-levels-in-the-table-of-contents
 \setcounter{tocdepth}{3}
@@ -200,11 +200,11 @@ It is worth to mention that with an unlimited system length capacity the average
 	 
 	\section{Introduction}
 	 
-	This experiment involves a number \emph{N} of bins and balls: for each ball random bins are chosen, one or more than one, depending on the dropping policy; given those bins a ball is put in one of them.	The goal is to evaluate the maximum occupancy of the bins and compare the results with the theoretical ones. \\
+	This experiment involves a number \emph{N} of bins and balls: for each ball random bins are chosen, one or more than one, depending on the dropping policy; given those bins a ball is put in one of them.	The goal is to evaluate the maximum bins occupancy and compare the results with the theoretical ones. \\
 	 There are 2 dropping policy:
 	\begin{itemize}
 		\item Random Dropping: for each ball a single random bin is chosen and the ball is put in it; 
-		\item Random Load Balancing: for each ball \emph{d} random bins are chosen and only the ball is put in the one with the lowest occupancy. In this simulation the values of \emph{d} used are 2 and 4.
+		\item Random Load Balancing: for each ball \emph{d} random bins are chosen and the ball is put only in the one with the lowest occupancy. In this simulation the values of \emph{d} used are 2 and 4.
 	\end{itemize}
 
 	\section{Tasks}
@@ -230,13 +230,13 @@ It is worth to mention that with an unlimited system length capacity the average
 			All these value are stored in a file and each field is tab separated.
 	
 	\subsection{Main data structure}
-			The data structure used is an array of integers. This array has length $num\_bins$ and it stores the bin occupancy at position \emph{i}. This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$).
+			The data structure used is a numpy array of integers. This array has length $num\_bins$ and it stores the bins occupancy. This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$).
 			
 	\subsection{Simulator Inputs \& Outputs}
 			The whole simulation runs inside a script where the simulator runs multiple times for multiple values of bins and balls. \\
 			The output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of bins and balls used. This .dat file is then elaborated by scripts in order to create some plots. There are 3 scripts for plotting:
 			\begin{itemize}
-				\item One plots the results of the simulation to have a comparison with the theoretical occupancy values;
+				\item One plots the results of the simulation in order to have a comparison with the theoretical occupancy values;
 				\item One plots the different performances of the dropping policy;
 				\item One plots the relative errors for different values of the number of runs.
 			\end{itemize}
@@ -250,7 +250,7 @@ It is worth to mention that with an unlimited system length capacity the average
 			The lower bound is calculated using the formula:
 			
 			\begin{equation} \label{eq:1}
-				 \text{max\_occupancy = }\frac{\log n}{\log \log n} 
+				 \text{expected\_max\_occupancy = }\frac{\log n}{\log \log n} 
 			\end{equation}
 			where \emph{n} is the number of bins and balls,\\
 			while the upper bound is just 3 times this formula.
@@ -261,17 +261,17 @@ It is worth to mention that with an unlimited system length capacity the average
 			\includegraphics[width = 0.45\textwidth]{Lab1/RandomLoadBalancingd2Runs3.png} \\
 			Even with 3 runs the Load Balancing with \emph{d=2} is near to the theoretical value.
 			\begin{equation} \label{eq:2}
-				 \text{max\_occupancy = }\frac{\log \log n}{\log d}
+				 \text{expected\_max\_occupancy = }\frac{\log \log n}{\log d}
 			\end{equation}
 			Where \emph{n} is the number of bins and balls and \emph{d} the number of random bins chosen. \\
 			It is possible to see that this formula is much smaller than formula \ref{eq:1}, so we expect a lower occupancy value.
 			
 			\includegraphics[width = 0.45\textwidth]{Lab1/RandomLoadBalancingd4Runs3.png} \\
 			Even with 3 runs the Load Balancing with \emph{d=4} is quite near to the theoretical value. 
-			It is possible to see that the average occupacy is lower with respect to the Load Balancing with \emph{d=2} (The 2 plots have the same y-axis scale).
+			It is possible to see that the average occupancy is lower with respect to the Load Balancing with \emph{d=2} (The 2 plots have the same y-axis scale).
 			
 			\includegraphics[width = 0.45\textwidth]{Lab1/ComparisonamongPolicies,Runs5.png} \\
-			With this graph it is possible to see the differences between the policies and in particular: the Balacing policy works better than the Random one and that with an increasing number of bins selected the maximum occupancy decreases. \\ There must be a trade-off between the number of bins selected and the script execution time because with large values of \emph{d} the occupancy decreases but the execution time increases: in the extreme case with \emph{d=\#bins} we would put the ball in the least occupied bins (similar to execute \emph{np.argmin(bins)}) and have an average maximum occupancy of 1 (one ball in each bin)  but that would require some time, especially for large number of bins.
+			With this graph it is possible to see the differences between the policies and in particular: the Balancing policy works better than the Random one and that with an increasing number of bins selected the maximum occupancy decreases. \\ There must be a trade-off between the number of bins selected and the script execution time because with large values of \emph{d} the occupancy decreases but the execution time increases: in the extreme case with \emph{d=\#bins} we would put the ball in the least occupied bins (similar to execute \emph{np.argmin(bins)}) and have an average maximum occupancy of 1 (one ball in each bin)  but that would require some time, especially for large number of bins.
 			
 			\includegraphics[width = 0.45\textwidth]{Lab1/RelativeErrorsRandomDroppingPolicy.png} \\
 			It is possible to see that the relative errors decrease with increasing the number of runs. 
@@ -330,13 +330,14 @@ It is worth to mention that with an unlimited system length capacity the average
 			All these value are stored in a file and each field is tab separated.
 	
 	\subsection{Simulator main data structure}
-				The data structure used is a binary array to store whether the element (birthday) at position \emph{i} is occupied or not (in the case of Birthday Paradox, there is already, at least, one person who was born in that day). \\ This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$). \\
+				The data structure used is a numpy binary array to store whether the element (day) at position \emph{i} is occupied or not (in the case of Birthday Paradox, there is already, at least, one person who was born in that day). \\ 
+				This data structure allows to have a constant access time ($\mathcal{O}(1)$) and also a worst-case constant access time ($\mathcal{O}(1)$). \\
 				For the calculation of the probability there is a counter that keeps how many conflicts happened for a given number of people. This is used to calculate the probability as $prob(conf)=\frac{\#conflicts}{\#people}$ at each run. \\
 				%For the minimum number of people there is a an array storing the minimum number of people for a conflict at each run.
 			
 	\subsection{Simulator inputs and outputs}
 			The whole simulation runs inside a script. The simulator runs each time for different values of people or just one in the case of finding the minimum number of people for a conflict. \\
-			At each iteration the output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of people or just one line in the case of minimum case. This first .dat file is then elaborated by a script to create the plots.
+			At each iteration the output is a .dat file that contains the output metrics, therefore this file will contain a number of lines equal to the number of different values of people or just one line in the case of minimum case. For the first case, the .dat file is then elaborated by a script to create the plots.
 		
 		\subsection{Coherence simulation \& theoretical formula}
 				\includegraphics[width = 0.45\textwidth]{Lab2/ProbabilityConflictDays365Runs250.png} \\
@@ -722,35 +723,37 @@ In general the performance follow the relations:
 \ifnum\value{debug}=4 {
     
 \chapter{Epidemic Models}
+\noindent
 	In this chapter there will be analysed some epidemic models, in particular SIR models. A SIR model is the population is divided in 3 categories:
 	\begin{itemize}
-					\item Susceptible: `health' people;
-					\item Infected: people who contracted the virus;
-					\item Recovered: people who contracted the virus and spent enough days infected and recovered.
+					\item \textbf{Susceptible}: `health' people;
+					\item \textbf{Infected}: people who contracted the virus;
+					\item \textbf{Recovered}: people who contracted the virus and spent enough days infected and recovered.
 				\end{itemize}
-				
+	\noindent
 	The values used are:
 	\begin{itemize}
 					\item Population size ($N$) equal to 10000 individuals;
-					\item An infection transmission rate, ($\beta$), equal to $0.2 day^{-1}$. This refers to the probability that an infected person infects other susceptible people, when some conditions are met: close contact, no protections and so on;
-					\item An recovery period equal to 14 days. So a recovery rate ($\gamma$) equal to $\frac{1}{14 days}=0.071 day^{-1}$.
+					\item An infection transmission rate, ($\beta$), equal to $0.2 \: day^{-1}$. This refers to the probability that an infected person infects other susceptible people, when some conditions are met: close contact, no protections and so on;
+					\item An recovery period equal to 14 days. So a recovery rate ($\gamma$) equal to $\frac{1}{14 \: days}=0.071 \: day^{-1}$.
 				\end{itemize}
 				
 				
 	 \section{Numerical SIR Models}
-	 						\includegraphics[scale=0.6]{Lab6/NumericalSIRModel.png} \\
+	 						\includegraphics[width = 0.45\textwidth]{Lab6/NumericalSIRModel.png} \\
 								The values of the S,I and R variable are calculated as follow:
 								\begin{itemize}
-								  \item[] \hspace{5cm} $S(t_{k+1}) = S(t_{k}) - \frac{\beta}{N} \: \Delta t \: S(t_{k}) \: I(t_{k})$
-									\item[] \hspace{5cm} $I(t_{k+1}) = I(t_{k}) + \frac{\beta}{N} \: \Delta t \: S(t_{k}) \: I(t_{k}) - \gamma \: \Delta t \: I(t_k)$
-									\item[] \hspace{5cm} $R(t_{k+1}) = R(t_{k}) + \gamma \: \Delta t \: I(t_k)$
+								  \item[] \hspace{12mm} $S(t_{k+1}) = S(t_{k}) - \frac{\beta}{N} \: \Delta t \: S(t_{k}) \: I(t_{k})$
+									\item[] \hspace{12mm} $I(t_{k+1}) = I(t_{k}) + \frac{\beta}{N} \: \Delta t \: S(t_{k}) \: I(t_{k}) - \gamma \: \Delta t \: I(t_k)$
+									\item[] \hspace{12mm} $R(t_{k+1}) = R(t_{k}) + \gamma \: \Delta t \: I(t_k)$
 								\end{itemize}
 								
+								\noindent
 								Actually these are the solutions of differential equations. When solving differential equations, it is needed to define the initial condition, in this case:
 								\begin{itemize}
-								  \item[] \hspace{5cm} $S(t_{0}) = N - 1$
-									\item[] \hspace{5cm} $I(t_{0}) = 1$
-									\item[] \hspace{5cm} $R(t_{0}) = 0$
+								  \item[] \hspace{25mm} $S(t_{0}) = N - 1$
+									\item[] \hspace{12mm} $I(t_{0}) = 1$
+									\item[] \hspace{12mm} $R(t_{0}) = 0$
 								\end{itemize}
 								This is the usual condition of the beginning of an epidemic.
 								
@@ -797,7 +800,7 @@ In general the performance follow the relations:
 							The major problem was in checking the distance between individuals since it is a complexity of $\mathcal{O}(N^2)$. So, some optimizations are needed and performed. \\ The main loop works as follow: \\ For each day, first it iterates for infected\_individuals ($\mathcal{O}(I)$), for infected individual it loops over each susceptible Individual in the region where the infected Individual belongs ($\mathcal{O}(n)$) and it checks the distance and if they are close enough if the infection happened. So, the major complexity of for each day is $\mathcal{O}(I \times n)$ and this value is much smaller than $\mathcal{O}(N^2)$, for I and n smaller than N as it usually is during the days. There are also some other complexity like the time in building the python dictionary but the more complex one was to check the distance between the Individuals.
 					
 					
-	 						\includegraphics[scale=0.6]{Lab6/SimulativeSIRModel0.png} \\
+	 						\includegraphics[width = 0.45\textwidth]{Lab6/SimulativeSIRModel0.png} \\
 								The values of the S,I and R variable are calculated as follow:
 								\begin{itemize}
 								  \item[] \hspace{5cm} $S(t_{k+1}) = S(t_{k}) - new\_infections$
