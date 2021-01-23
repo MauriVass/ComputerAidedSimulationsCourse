@@ -1,0 +1,20 @@
+Laboratory #2
+
+There is only one execution script: BinBalls.py.
+The command to execute it is:
+  python BinBalls.py --bins B --runs R
+  where:
+        -B is the number of bins: [1,2,4];
+        -R is the number of runs.
+
+There are present some output files (OutputFiles.zip) so that if want to run the plotting scripts you can without simulate them (you are free to do it anyway).
+
+There are 3 plotting scripts:
+1) python PlotResults.py --bins B --runs R
+        -It plots a graph of the results obtained with the given B and R.
+
+2) python PlotResults_ComparePolicies.py --runs R
+        -It compares the different policies (B=[1,2,4]) for a given R.
+
+3) python PlotResults_RelErr.py --bins B
+        -It compares the relative errors (R=[3,5,10]) for a given B.

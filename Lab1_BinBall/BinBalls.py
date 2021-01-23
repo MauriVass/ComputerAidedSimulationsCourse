@@ -4,7 +4,7 @@ from scipy.stats import t
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('--bins', type=int, help='Number of bins: [1,2,4]', required=False, default=1)
+parser.add_argument('--bins', type=int, help='Number of bins: [1,2,4]', choices=[1,2,4], required=False, default=1)
 parser.add_argument('--runs', type=int, help='Number or runs: (r>1)', required=False, default=3)
 args = parser.parse_args()
 
@@ -45,8 +45,8 @@ def evaluate_conf_interval(x):
 def findLeastOccupied(bins,rnd_bins):
     #Index of the bin where to put the ball
     index = -1
-    #Check the least occupied bin and increase its occupancy. (if n_bins = [2,4])
-    #Just return the index. (if n_bins=1)
+    #Check the least occupied bin in case of n_bins = [2,4],
+    #Or just return the index, if n_bins=1
     min_val = np.Inf
     for i in rnd_bins:
         if(min_val > bins[i]):
@@ -58,7 +58,7 @@ def run_simulator(n): # run the bins-and-ball model for n bins and for multiple 
     random.seed(a=initial_seed) # reset initial seed
     maxvec = np.full(runs, 0) # init vector for the maximum for each run
     for r in range(runs): # for each run
-        bins = np.full(n, 0) # bins[i] is the occupancy of bin i; start from empty bins
+        bins = np.full(n, 0) # bins[i] is the occupancy of bin at position i; start from empty bins
         for i in range(n): # for each ball
             rnd_bins = random.sample(range(0, n), n_bins) #select n_bins different bins [1,2,4]
             ind = findLeastOccupied(bins,rnd_bins)            
