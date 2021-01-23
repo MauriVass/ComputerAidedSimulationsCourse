@@ -1,0 +1,15 @@
+Laboratory #2.2
+
+There is only one execution script: BirthdayParadox.py.
+The command to execute it is:
+  python BirthdayParadox.py --ind_day D --runs R [-isMin]
+  where:
+        -D: is the index of the number of days: (0:365, 1:10**5, 2:10**6);
+        -R: is the number of runs.
+        -isMin: is used to find minimum number of people needed to experience a collision
+
+There are present some output files (OutputFiles.zip) so that if want to run the plotting scripts you can without simulate them (you are free to do it anyway).
+
+There is 1 plotting script:
+1) python PlotResultsProb.py --ind_day D --runs R [-relError]
+        -relError: is used whether you want the relative errors or not
