@@ -1,0 +1,32 @@
+Laboratory #1
+
+commands to run simulation script:
+python Queue.py --task TASK --servt DISTRIBUTION --maxcap B --nserv m --servpoli P
+where:
+        TASK: is the task: 1:M/X/1, 2:MX1B, 3:MXBm; (X=M or G)
+        DISTRIBUTION: is the service distribution: 'Exp', 'Uni';
+        B: is the system capacity;
+        m: the number of services;
+        P: the server choosing policy: 1:Random server, 2:Fastest server
+
+There are present some output files (OutputFiles.zip) so that if want to run the plotting scripts you can without simulate them (you are free to do it anyway).
+
+commands to run plotting script (Plot.py) with he given output files:
+-Task 1:  python Plot.py --task 1 --servt Exp
+          python Plot.py --task 1 --servt Uni
+
+-Task 2:  python Plot.py --task 2 --servt Exp
+          python Plot.py --task 2 --servt Uni
+
+-Task 3:  python Plot.py --task 3 --servt Exp --servpoli  1
+          python Plot.py --task 3 --servt Uni --servpoli  1
+
+          python Plot.py --task 3 --servt Exp --servpoli  2
+          python Plot.py --task 3 --servt Uni --servpoli  2
+
+          #Multiserver (m=2), Finite capacity, Random policy
+          python Plot.py --task 3 --servt Exp --nserv 2 --ms_mc 0
+          python Plot.py --task 3 --servt Uni --nserv 2 --ms_mc 0
+
+For other configuration, have to run Queue.py script with the wanted configuration
+and eventually change the Plot.py script depending on the request
