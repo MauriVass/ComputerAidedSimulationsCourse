@@ -1,0 +1,7 @@
+Laboratory #4
+
+commands to run simulation script:
+python NumericalSIRmodel.py
+python SimulativeSIRmodel.py [-extension]
+
+There are present some output files (OutputFiles.zip) so that if want to run the plotting scripts you can without simulate them (you are free to do it anyway).

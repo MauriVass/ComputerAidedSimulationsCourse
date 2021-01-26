@@ -7,7 +7,7 @@ population_size = 10000
 total_days = 365
 #The number of people per day an infected person infects someone susceptible (beta) [day^-1]
 transmission_rate=0.2
-#The number of days an infencted person stays infeccted (gamma) [day^-1]
+#The number of days an infencted person stays infected (gamma) [day^-1]
 infection_period=14
 recovery_rate=1/infection_period
 
@@ -30,8 +30,8 @@ R[0] = 0
 #In the worst case the pandemic ends at the end of the simulation
 end_epidemic = total_days - 1
 for d in range(0,total_days-1):
-	print('Day ',d,end='\n')
-	print(f'Situation: S: {S[d]}, I: {I[d]}, R: {R[d]}, Total: {S[d]+I[d]+R[d]}')
+	# print(f'Day: {d}, Situation: S: {S[d]}, I: {I[d]}, R: {R[d]}, Total: {S[d]+I[d]+R[d]}')
+	
 	###	Solving Differential equations	###
 	#The number of susceptible people tomorrow depends on today S and I values
 	susceptible_today_value = (transmission_rate/population_size)*S[d]*I[d]
@@ -41,7 +41,7 @@ for d in range(0,total_days-1):
 	I[d+1] = I[d] + 1 * (susceptible_today_value-infected_today_value)
 	R[d+1] = R[d] + 1 * infected_today_value
 	if(I[d+1]<1):
-		end_epidemic = d
+		end_epidemic = d + 1
 		break
 
 print(f'Epidemic ended at day: {end_epidemic}')
