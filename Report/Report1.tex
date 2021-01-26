@@ -49,7 +49,7 @@
 }
 
 \newcounter{debug}
-\setcounter{debug}{2}
+\setcounter{debug}{4}
 
 %https://tex.stackexchange.com/questions/291307/how-to-hide-show-section-levels-in-the-table-of-contents
 \setcounter{tocdepth}{3}
@@ -726,7 +726,7 @@ In general the performance follow the relations:
 \noindent
 	In this chapter there will be analysed some epidemic models, in particular SIR models. A SIR model is the population is divided in 3 categories:
 	\begin{itemize}
-					\item \textbf{Susceptible}: `health' people;
+					\item \textbf{Susceptible}: `healthy' people;
 					\item \textbf{Infected}: people who contracted the virus;
 					\item \textbf{Recovered}: people who contracted the virus and spent enough days infected and recovered.
 				\end{itemize}
@@ -734,7 +734,7 @@ In general the performance follow the relations:
 	The values used are:
 	\begin{itemize}
 					\item Population size ($N$) equal to 10000 individuals;
-					\item An infection transmission rate, ($\beta$), equal to $0.2 \: day^{-1}$. This refers to the probability that an infected person infects other susceptible people, when some conditions are met: close contact, no protections and so on;
+					\item A contact rate, ($\beta$), equal to $0.2 \: day^{-1}$. This refers to the average number of people that an infected person meet each day;
 					\item An recovery period equal to 14 days. So a recovery rate ($\gamma$) equal to $\frac{1}{14 \: days}=0.071 \: day^{-1}$.
 				\end{itemize}
 				
@@ -743,21 +743,22 @@ In general the performance follow the relations:
 	 						\includegraphics[width = 0.45\textwidth]{Lab6/NumericalSIRModel.png} \\
 								The values of the S,I and R variable are calculated as follow:
 								\begin{itemize}
-								  \item[] \hspace{12mm} $S(t_{k+1}) = S(t_{k}) - \frac{\beta}{N} \: \Delta t \: S(t_{k}) \: I(t_{k})$
-									\item[] \hspace{12mm} $I(t_{k+1}) = I(t_{k}) + \frac{\beta}{N} \: \Delta t \: S(t_{k}) \: I(t_{k}) - \gamma \: \Delta t \: I(t_k)$
-									\item[] \hspace{12mm} $R(t_{k+1}) = R(t_{k}) + \gamma \: \Delta t \: I(t_k)$
+								  \item[] \hspace{10mm} $S(t_{k+1}) = S(t_{k}) - \frac{\beta}{N} \: \Delta t \: S(t_{k}) \: I(t_{k})$
+									\item[] \hspace{10mm} $I(t_{k+1}) = I(t_{k}) + \frac{\beta}{N} \: \Delta t \: S(t_{k}) \: I(t_{k}) - \gamma \: \Delta t \: I(t_k)$
+									\item[] \hspace{10mm} $R(t_{k+1}) = R(t_{k}) + \gamma \: \Delta t \: I(t_k)$
 								\end{itemize}
 								
 								\noindent
 								Actually these are the solutions of differential equations. When solving differential equations, it is needed to define the initial condition, in this case:
 								\begin{itemize}
 								  \item[] \hspace{25mm} $S(t_{0}) = N - 1$
-									\item[] \hspace{12mm} $I(t_{0}) = 1$
-									\item[] \hspace{12mm} $R(t_{0}) = 0$
+									\item[] \hspace{25mm} $I(t_{0}) = 1$
+									\item[] \hspace{25mm} $R(t_{0}) = 0$
 								\end{itemize}
 								This is the usual condition of the beginning of an epidemic.
-								
-			The maximum number of infected people is 2823 and it is reached at the day 80. The pandemic ends at day 229 when the number of infected people is less than 1(?), at this day the number of susceptible people are 705 and the number of recovered one is 9294.
+							
+\noindent
+The maximum number of infected people is 2823 and it is reached at the day 80. The pandemic ends at day 229 when the number of infected people is less than 1, at this day the number of susceptible people are 705 and the number of recovered one is 9294.
 			
 			
 			\section{Simulative SIR Models}
@@ -767,11 +768,8 @@ In general the performance follow the relations:
 					\begin{itemize}
 						\item The population size;
 						\item The total days the simulation will run for;
-						\item The transmission rate, 0.2 in this case (as descriptive above);
-						\item The infection period, 14 in this case;
-						\item The length movement: how much an individual can move;
-						\item The number regions in which divide the population;
-						\item The contact range: the distance at which Individual can interact;
+						\item The contact rate, 0.2 [$days^{-1}$] in this case;
+						\item The infection period, 14 [$days$] in this case;
 						\item The seed value used to initialize a pseudorandom number generator;
 						\item The confidence level used to calculate the confidence interval;
 						\item The number of runs: the number of times that we run our simulation. This is done in order to have more accurate.
@@ -780,40 +778,102 @@ In general the performance follow the relations:
 				\subsection{Define all the output metrics of the simulator}
 				The output metrics of the simulation are:
 				\begin{itemize}
-					\item For both the maximum number of infected people and the day at which this occurs:
+					\item For both the maximum number of infected people, the day at which this occurs and the day at which the simulation ends:
 					\begin{itemize}
 						\item The average;
 						\item The length of the confidence interval;
-						\item The relative error;
-					\end{itemize}
-					\item The $R_t$ value for each day.
-				\end{itemize}
+						\item The relative error.
+					\end{itemize}					
+			\end{itemize}
 			
 			\subsection{Define the main data structures for the simulator}
 						The main data structures are: 
 							\begin{itemize}
-								\item A custom class Individual, where to store some variables (the category, the position in the space ,...) and some methods (Move() to move the individual in the space, ...)
+								\item A custom class Individual, where to store some variables (the category, the day when he is infected, ...) and some methods (UpdateState() that checks if an Individual recovered or not, ...)
 								\item A python list with N objects of type Individual;
-								\item A python set where to store the index of the Individual that are infected at day d. This avoid to loop over the all population since $I<N$ (I=number of individual infected);
-								\item A python dictionary with key, the number of the region, and as value a set with all the susceptible Individuals in that region. This avoid to loop again over the all population since the number of Individuals in a region is much smaller than N ($n=\frac{N}{number\_regions^2}$, assuming uniform distribution)
+								\item A python set where to store the index of the Individual that are infected at day d. This avoid to loop over the all population since $I<N$ (I=number of individual infected at a given day).
 							\end{itemize}
-							The major problem was in checking the distance between individuals since it is a complexity of $\mathcal{O}(N^2)$. So, some optimizations are needed and performed. \\ The main loop works as follow: \\ For each day, first it iterates for infected\_individuals ($\mathcal{O}(I)$), for infected individual it loops over each susceptible Individual in the region where the infected Individual belongs ($\mathcal{O}(n)$) and it checks the distance and if they are close enough if the infection happened. So, the major complexity of for each day is $\mathcal{O}(I \times n)$ and this value is much smaller than $\mathcal{O}(N^2)$, for I and n smaller than N as it usually is during the days. There are also some other complexity like the time in building the python dictionary but the more complex one was to check the distance between the Individuals.
+							For every infected Individual at day $d$ a number of contacts (n) is chosen following a Poisson distribution (with parameter $\lambda=contact\_rate$), then n Individuals are chosen to be infected. \\
+							For each new infected, the day at which they will recover is chosen using a Geometric distribution (with parameter $p=\frac{1}{infection\_period}$). These distributions are chosen for 2 reasons:
+							\begin{itemize}
+							\item They are both discrete distributions;
+							\item They seem to fit a real pandemic situation.
+							\end{itemize}
 					
-					
+					\subsection{S(t), I(t), R(t) plot}
 	 						\includegraphics[width = 0.45\textwidth]{Lab6/SimulativeSIRModel0.png} \\
 								The values of the S,I and R variable are calculated as follow:
 								\begin{itemize}
-								  \item[] \hspace{5cm} $S(t_{k+1}) = S(t_{k}) - new\_infections$
-									\item[] \hspace{5cm} $I(t_{k+1}) = I(t_{k}) + new\_infections - new\_recovered$
-									\item[] \hspace{5cm} $R(t_{k+1}) = R(t_{k}) + new\_recovered$
-									\item[] \hspace{5cm} $R_t(t_{k+1}) = R_t(t_{k}) + ???$
+								  \item[] \hspace{0mm} $S(t_{k+1}) = S(t_{k}) - new\_infections$
+									\item[] \hspace{0mm} $I(t_{k+1}) = I(t_{k}) + new\_infections - new\_recovered$
+									\item[] \hspace{0mm} $R(t_{k+1}) = R(t_{k}) + new\_recovered$
 			 					\end{itemize}
-			 Actually these SIR formulas are the same formulas as the numerical case but there here is not an analytical formula for $new\_infections$ and $new\_recovered$ but they have to be obtained through simulation.
-			 In particular $new\_infections$ is the number of new infections at day $t_k$ and \\
-			  $new\_recovered$ is the number of new recovered at day  $t_k$.
+			 Actually these SIR formulas are the same formulas as the numerical case but there here there is not an analytical formula for $new\_infections$ and $new\_recovered$ but they have to be obtained through simulation.
+			 In particular $new\_infections$ is the number of new infections at day $t_k$ and $new\_recovered$ is the number of new recovered at day  $t_k$.
 			  								
-			The maximum number of infected people is 2312.66 with a confidence interval length of 738.86 (relative error = 0.32) and it is reached at the day 207.33 with a confidence interval length of 83.37. The pandemic ends at day 229 when the number of infected people is less than 1(?), at this day the number of susceptible people are 705 and the number of recovered one is 9294.
-			 
-			 
-} \fi
+			The results with 7 runs are: the maximum number of infected people is 2758.14 with a confidence interval length of 84.80 (relative error = 0.03) and it is reached at the day 76 with a confidence interval length of 9.44 (relative error = 0.12). The pandemic ends at day 265 when the number of infected people is equal to 0, with confidence interval length 44.29 (relative error = 0.16).
+			
+			\subsection{Rt(t) plot}
+			The Rt value is defined as: \emph{average number of secondary infections produced by a typical infective during the entire period of infectiousness at time t}. \\
+			 It is an important value to understand the trend of the pandemic: whether the epidemic is expected to grow ($Rt > 1$), or will start declining ($Rt < 1$).
+			\includegraphics[width = 0.45\textwidth]{Lab6/SimulativeSIRModel(Rt)0.png} \\
+			
+
+			\section{Simulative SIR Models (extension)}
+			
+			\subsection{Define all the input parameters of the simulator}
+					The additional input parameters of the simulation are:
+					\begin{itemize}
+						\item The transmission rate. This refers to the probability that an infected person infects other susceptible people, when some conditions are met: close contact, no protections and so on;
+						\item The movement length: how much an individual can move each day;
+						\item The contact distance: the distance at which Individual can interact;
+						\item The number regions in which divide the population.
+					\end{itemize}
+					
+					\subsection{Define the main data structures for the simulator}
+						The additional main data structures are: 
+							\begin{itemize}
+								\item A python dictionary with key, the number of the region, and as value a set with all the susceptible Individuals in that region. This avoid to loop again over the all population since the number of Individuals in a region is much smaller than N ($n=\frac{N}{number\_regions^2}$, on average, assuming uniform distribution)
+							\end{itemize}
+							For every infected Individual is calculated the distance between him and all the other Individual; if this distance is less than a threshold (contact\_distance) then they can interact and the Individual is infected with probability $transmission\_rate=0.2$\\
+							The major problem in checking the distance between Individuals is the complexity: $\mathcal{O}(N^2)$; this is quite a large complexity and may require lot of time, especially for large number of N. For this reason, some optimizations are needed and implemented. \\
+	The main loop works as follow: \\
+	For each day, first the simulator iterates over all the infected Individuals in that particular day ($\mathcal{O}(I)$), for every infected Individual it loops over each susceptible Individual in the region where the infected Individual belongs ($\mathcal{O}(n)$) and it checks the distance and, if they are close enough, if the infection happened. So, the major complexity of for each day is 
+	\[ \mathcal{O}(I \times n)=\mathcal{O}(I \times \frac{N}{number\_regions^2}) \] and this value is much smaller than $\mathcal{O}(N^2)$, for $I$ smaller than $N$ (as it usually is during the different day) and for $number\_regions$ greater than 1. \\
+	 There are also some other complexity like the time in building the python dictionary for dividing the population in regions but it is quite fast.\\
+	Dividing the population in regions introduce some approximation since 2 Individuals in 2 different regions (e.g. at the edge) but close enough ($distance<contact\_distance$) can not be infected, but the speed up is significant! \\
+	\noindent
+				The results with 7 runs are: the maximum number of infected people is 3204.16 with a confidence interval length of 87.77 (relative error = 0.03) and it is reached at the day 66.5 with a confidence interval length of 7.53 (relative error = 0.11). The pandemic ends at day 211.5 when the number of infected people is equal to 0, with confidence interval length 13.48 (relative error = 0.06).
+				
+			\subsection{S(t), I(t), R(t) plot}
+			\includegraphics[width = 0.45\textwidth]{Lab6/SimulativeSIRModel(extension)0.png} \\
+			
+			\subsection{Rt(t) plot}
+			 \includegraphics[width = 0.45\textwidth]{Lab6/SimulativeSIRModel(Rt)(extension)0.png} \\
+			The 2 models can not be compared since they have different parameters, but the trends are similar.
+		
+		\subsection{Summary results}
+		
+	% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.35}
+\resizebox{0.48\textwidth}{!}{%
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\textbf{\begin{tabular}[c]{@{}c@{}}SIR\\ Model\end{tabular}} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}Avg\\ Max\\ Infected\end{tabular}} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}RE\\ Max\\ Infected\end{tabular}} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}Avg\\ Max\\ Infected\\ (Day)\end{tabular}} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}RE\\ Max\\ Infected\\ Day\end{tabular}} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}Avg\\ End\\ Epidemic\end{tabular}} &
+  \textbf{\begin{tabular}[c]{@{}c@{}}RE\\ End\\ Epidemic\end{tabular}} \\ \hline
+\textbf{\begin{tabular}[c]{@{}c@{}}Numerical\end{tabular}}          		& 2823 & / & 80 & / & 229 & / \\ \hline
+\textbf{\begin{tabular}[c]{@{}c@{}}Simulative\end{tabular}}               				& 2758.14 & 0.03 & 76 & 0.12 & 265 & 0.16 \\ \hline
+\textbf{\begin{tabular}[c]{@{}c@{}}Simulative\\ (extension)\end{tabular}} & 3204.16 & 0.03 & 66.5 & 0.11 & 211.5 & 0.06 \\ \hline
+\end{tabular}%
+}
+\end{table}
+
 \end{document}
