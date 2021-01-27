@@ -1,7 +1,7 @@
 Laboratory #3
 
 -Fingerprint
-There is only one script: Fingerprint.py. The only requirement (same for the other scripts) is the presence of the file with the English words
+There is only one execution script: Fingerprint.py. The only requirement (same for the other scripts) is the presence of the file with the English words
 with the name words_alpha.txt in this folder (./words_alpha.txt) (Link: https://github.com/dwyl/english-words/blob/master/words_alpha.txt)
 
 -Bit String Array & Bloom filter
