@@ -117,6 +117,7 @@
 \ifnum\value{debug}=1 {
     
 \chapter{Queue Systems}
+\noindent
 	These experiments are performed to understand the behaviour of a queue system with a given number of servers (one or more), a capacity waiting line (finite or infinite) a FIFO (First In First Out) serving discipline and inter-arrivals time that follow a Poisson process.
 	
 	 \section{A single-Server queuing system}
@@ -200,7 +201,7 @@ It is worth to mention that with an unlimited system length capacity the average
 	 
 	\section{Introduction}
 	 
-	This experiment involves a number \emph{N} of bins and balls: for each ball random bins are chosen, one or more than one, depending on the dropping policy; given those bins a ball is put in one of them.	The goal is to evaluate the maximum bins occupancy and compare the results with the theoretical ones. \\
+	This experiment involves a number \emph{N} of bins and balls: for each ball, some random bins are chosen, one or more than one, depending on the dropping policy; given those bins a ball is put in one of them.	The goal is to evaluate the maximum bins occupancy and compare the results with the theoretical ones. \\
 	 There are 2 dropping policy:
 	\begin{itemize}
 		\item Random Dropping: for each ball a single random bin is chosen and the ball is put in it; 
@@ -354,7 +355,7 @@ It is worth to mention that with an unlimited system length capacity the average
 				
 				
 		\subsection{Required elements given a priori probability}
-				Yes, it is possible using the following formula:
+				It is possible to calculate the number of elements using the following formula:
 				\[
 						num\_elements \: = \: \sqrt{2 \times number\_days \times \log{ \left( \frac{1}{1-p} \right) } }
 				\]
@@ -405,7 +406,7 @@ It is worth to mention that with an unlimited system length capacity the average
 						The minimum number of bits necessary to store all the words in a fingerprint table without conflicts is: $b^{exp} = 39$ bits. \\
 						To find this value, for each one of the words, the fingerprint is calculated:
 						\begin{itemize}
-								\item[] Each word is encode using the UTF-8 character encoding, then the MD5 hash is calculated. This MD5 hash returns a 128 bits value but since it is required to have fingerprint length is $b^{exp}$ bits, the MD5 hash value is converted to integer and only the last  $b^{exp}$ bits are taken; this is done with the module operation: \[ fingerprint\_value = word\_hash\_int \: \% \: 2^{b^{exp}} \]
+								\item[] Each word is encoded using the UTF-8 character encoding, then the MD5 hash is calculated. This MD5 hash returns a 128 bits value but since it is required to have fingerprint length is $b^{exp}$ bits, the MD5 hash value is converted to integer and only the last  $b^{exp}$ bits are taken; this is done with the module operation: \[ fingerprint\_value = word\_hash\_int \: \% \: 2^{b^{exp}} \]
 						\end{itemize}
 						This operation is repeated for each word and candidate $b^{exp}$ value until the minimum value possible is found. In particular this search is performed using a Binary Search algorithm; to write is a bit more complex than other algorithms but it is faster: for example is faster than an algorithm that checks all numbers between 1 and infinite and stops as soon it find a value of $b^{exp}$ such that any collision is found.
 						
@@ -441,7 +442,7 @@ It is worth to mention that with an unlimited system length capacity the average
 					\[
 							b^{teo} \: = \: \log{ \left( - \frac{num\_words^2}{2\times \ln\left({1-p}\right)} \right)}
 					\]
-					This formula is obtained solving the probability of conflict equation of the Birthday Paradox in function of n (the number of days). In this case the number of days is substituted by the possible length of the fingerprint table($n=2^bits$).
+					This formula is obtained solving the probability of conflict equation of the Birthday Paradox in function of n (the number of days). In this case the number of days is substituted by the possible length of the fingerprint table ($n=2^{bits}$).
 					
 			\subsection{Relation $b^{exp}$ and $b^{teo}$}
 					The theoretical value and the simulated value are really close: 
@@ -499,9 +500,9 @@ It is worth to mention that with an unlimited system length capacity the average
 						\end{tabular}
 						}
 				\end{table}
-				It is possible to see that  the memory required for the python set is much more the memory required to store the fingerprint table. This difference is more evident if the elements to be stored are different in sizes, for example: to store audio files, the memory required for the python set would be very high instead the one for the fingerprint table would not change (as long as we keep the same value of number of bits). \\
+				It is possible to see that  the memory required for the python set is much more than the memory required to store the fingerprint table. This difference is more evident if the elements to be stored are different in sizes, for example: to store audio files, the memory required for the python set would be very high instead the one for the fingerprint table would not change (as long as we keep the same value of number of bits). \\
 				The probabilities of false positive is calculated using $ 5 \times 10^{6}$ number of testing words (words not in the English dictionary) but the probability of false positive for the fingerprint table in some runs were still 0. \\
-				Actually, this rare event and would require even an higher number of test words but this would take more time and computational power so in this case it is better to calculate analytically with the following formula:
+				Actually, this is a rare event and would require even an higher number of test words but this would take more time and computational power so in this case it is better to calculate analytically with the following formula:
 				\begin{center}
 					prob(false\_pos) = number\_words / $2^{39} =  6.732 \times 10^{-7}$
 			\end{center}
@@ -516,7 +517,7 @@ It is worth to mention that with an unlimited system length capacity the average
 					\begin{itemize}
 						\item The file containing the English words;
 						\item A list with the possible values of the number of bits: [19, 20, 21, 22, 23, 24];
-						\item A flag to indicate that we want to use Bit String Array or Bloom Filter. (0:Bit String Array).
+						\item An integer flag to indicate that we want to use Bit String Array or Bloom Filter. (0: Bit String Array).
 					\end{itemize}
 					 
 				\subsection{Output Metrics}
@@ -589,7 +590,7 @@ It is worth to mention that with an unlimited system length capacity the average
 					\begin{itemize}
 						\item The file containing the English words;
 						\item A list with the possible values of the number of bits: [19, 20, 21, 22, 23, 24];
-						\item A flag to indicate that we want to use Bit String Array or Bloom Filter. (1:Bloom Filter).
+						\item An integer flag to indicate that we want to use Bit String Array or Bloom Filter. (1: Bloom Filter).
 						\item The seed value used to initialize the pseudorandom
 number generator;
 						\item The confidence level used to calculate the confidence interval;
@@ -713,9 +714,9 @@ In general the performance follow the relations:
 				Given the theoretical formula: 
 				\[ theo\_dist\_words = - \frac{n}{k} \ln \left( 1 - \frac{N_1}{n} \right) \]
 				\begin{center}
-				where: \emph{n} is the bloom filter storage length, \emph{k} is the optimal number of hash functions given a number of bit  (\ref{eq:3}) and $N\_1$ is the actual number of 1s in the bloom filter. 
+				where: \emph{n} is the bloom filter storage length, \emph{k} is the optimal number of hash functions given a number of bit  (\ref{eq:3}) and $N_1$ is the actual number of 1s in the bloom filter. 
 				\end{center}
-				It is possible to see that the simulation is quite accurate with respect to the theoretical formula. This is shown using the relative errors ($ rel\_err=\frac{|theo\_dist\_words-dist\_words|}{dist\_words} $) and these relative errors are low (the axis scale is quite low) so the theoretical formula is accurate. Moreover it can be noted that the relative errors higher number of bits seems to be more constant while for lower values of bits there is more fluctuation.
+				It is possible to see that the simulation is quite accurate with respect to the theoretical formula. This is shown using the relative errors ($ rel\_err=\frac{|theo\_dist\_words-dist\_words|}{dist\_words} $) and these relative errors are low (the axis scale is quite low) so the theoretical formula is accurate. Moreover it can be noted that the relative errors with a higher number of bits seems to be more constant while for lower values of bits there is more fluctuation.
 				
 } \fi
 
@@ -724,17 +725,17 @@ In general the performance follow the relations:
     
 \chapter{Epidemic Models}
 \noindent
-	In this chapter there will be analysed some epidemic models, in particular SIR models. A SIR model is the population is divided in 3 categories:
+	In this chapter there will be analysis of some epidemic models, in particular SIR models. In a SIR model is the population is divided in 3 categories:
 	\begin{itemize}
 					\item \textbf{Susceptible}: `healthy' people;
 					\item \textbf{Infected}: people who contracted the virus;
-					\item \textbf{Recovered}: people who contracted the virus and spent enough days infected and recovered.
+					\item \textbf{Recovered}: people who contracted the virus, spent enough days infected and recovered.
 				\end{itemize}
 	\noindent
 	The values used are:
 	\begin{itemize}
 					\item Population size ($N$) equal to 10000 individuals;
-					\item A contact rate, ($\beta$), equal to $0.2 \: day^{-1}$. This refers to the average number of people that an infected person meet each day;
+					\item A contact rate, ($\beta$), equal to $0.2 \: day^{-1}$. This refers to the average number of people that an infected person meets each day;
 					\item An recovery period equal to 14 days. So a recovery rate ($\gamma$) equal to $\frac{1}{14 \: days}=0.071 \: day^{-1}$.
 				\end{itemize}
 				
@@ -826,23 +827,23 @@ The maximum number of infected people is 2823 and it is reached at the day 80. T
 					\begin{itemize}
 						\item The transmission rate. This refers to the probability that an infected person infects other susceptible people, when some conditions are met: close contact, no protections and so on;
 						\item The movement length: how much an individual can move each day;
-						\item The contact distance: the distance at which Individual can interact;
+						\item The contact distance: the distance at which Individuals can interact;
 						\item The number regions in which divide the population.
 					\end{itemize}
 					
 					\subsection{Define the main data structures for the simulator}
 						The additional main data structures are: 
 							\begin{itemize}
-								\item A python dictionary with key, the number of the region, and as value a set with all the susceptible Individuals in that region. This avoid to loop again over the all population since the number of Individuals in a region is much smaller than N ($n=\frac{N}{number\_regions^2}$, on average, assuming uniform distribution)
+								\item A python dictionary with key, the number of the region, and as value a set with all the susceptible Individuals in that region. This avoids to loop again over the all population since the number of Individuals in a region is much smaller than N ($n=\frac{N}{number\_regions^2}$, on average, assuming uniform distribution)
 							\end{itemize}
-							For every infected Individual is calculated the distance between him and all the other Individual; if this distance is less than a threshold (contact\_distance) then they can interact and the Individual is infected with probability $transmission\_rate=0.2$\\
+							For every infected Individua,l is calculated the distance between him and all the other Individual; if this distance is less than a threshold (contact\_distance) then they can interact and the Individual is infected with probability $transmission\_rate=0.2$\\
 							The major problem in checking the distance between Individuals is the complexity: $\mathcal{O}(N^2)$; this is quite a large complexity and may require lot of time, especially for large number of N. For this reason, some optimizations are needed and implemented. \\
 	The main loop works as follow: \\
-	For each day, first the simulator iterates over all the infected Individuals in that particular day ($\mathcal{O}(I)$), for every infected Individual it loops over each susceptible Individual in the region where the infected Individual belongs ($\mathcal{O}(n)$) and it checks the distance and, if they are close enough, if the infection happened. So, the major complexity of for each day is 
+	For each day, first the simulator iterates over all the infected Individuals in that particular day ($\mathcal{O}(I)$), for every infected Individual it loops over each susceptible Individual in the region where the infected Individual belongs ($\mathcal{O}(n)$), it checks the distance and, if they are close enough, if the infection happened. So, the major complexity of for each day is 
 	\[ \mathcal{O}(I \times n)=\mathcal{O}(I \times \frac{N}{number\_regions^2}) \] and this value is much smaller than $\mathcal{O}(N^2)$, for $I$ smaller than $N$ (as it usually is during the different day) and for $number\_regions$ greater than 1. \\
 	 There are also some other complexity like the time in building the python dictionary for dividing the population in regions but it is quite fast.\\
-	Dividing the population in regions introduce some approximation since 2 Individuals in 2 different regions (e.g. at the edge) but close enough ($distance<contact\_distance$) can not be infected, but the speed up is significant! \\
-	\noindent
+	Dividing the population in regions introduce some approximation since 2 Individuals in 2 different regions (e.g. at the edge) but close enough ($distance<contact\_distance$) can not be infected; but the speed up is significant! \\
+	
 				The results with 7 runs are: the maximum number of infected people is 3204.16 with a confidence interval length of 87.77 (relative error = 0.03) and it is reached at the day 66.5 with a confidence interval length of 7.53 (relative error = 0.11). The pandemic ends at day 211.5 when the number of infected people is equal to 0, with confidence interval length 13.48 (relative error = 0.06).
 				
 			\subsection{S(t), I(t), R(t) plot}
@@ -851,7 +852,8 @@ The maximum number of infected people is 2823 and it is reached at the day 80. T
 			\subsection{Rt(t) plot}
 			 \includegraphics[width = 0.45\textwidth]{Lab6/SimulativeSIRModel(Rt)(extension)0.png} \\
 			The 2 models can not be compared since they have different parameters, but the trends are similar.
-		
+			
+		\newpage
 		\subsection{Summary results}
 		
 	% Please add the following required packages to your document preamble:
@@ -876,4 +878,5 @@ The maximum number of infected people is 2823 and it is reached at the day 80. T
 }
 \end{table}
 
+} \fi
 \end{document}
