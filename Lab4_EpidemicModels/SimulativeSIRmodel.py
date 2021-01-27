@@ -231,9 +231,6 @@ else:
 	contact_distance = 1
 	#These are not used anyway
 
-print('Transmission Rate: ', transmission_rate)
-print('Recovery Rate: ', recovery_rate)
-
 #With initial seed 2002 and extension=False -> no degenerate runs wth n_runs=7
 #With initial seed 2001 and extension=False -> no degenerate runs wth n_runs=7
 initial_seed = 2001 if extension else 2002
@@ -275,6 +272,22 @@ Max Infections: 2191, day at which occurs: 132
 #since 2 persons in 2 different regions (e.g. at the edge) but close enough(dist<contact_distance) can not be infected,
 #Also the difference between statistics(Max Infections,...) is not too much(the results are also affected by randomicity) but the speed up is significant!
 ###	END INITIAL PARAMETERS	###
+
+print("*** INITIAL SETTINGS ***")
+print("Simulative SIR model:")
+print('Population Size: ', population_size)
+print('Total Days: ', total_days)
+print('Transmission Rate: ', transmission_rate, 'days^-1')
+print('Recovery Rate: ', recovery_rate, 'days^-1')
+print('Extension: ', extension)
+if(extension):
+	print('Length Movement: ', length_movement)
+	print('Contact Distance: ', contact_distance)
+print("Initial seed: ",initial_seed)
+print("Confidence level: ",confidence_level)
+print("Number of runs: ",n_runs)
+print("*** END INITIAL SETTINGS ***\n")
+
 
 def Simulator(r):
 	print(f"\n{'#'*5}\tStarting Run: {r}\t{'#'*5}")

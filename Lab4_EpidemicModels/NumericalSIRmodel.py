@@ -11,11 +11,18 @@ transmission_rate=0.2
 infection_period=14
 recovery_rate=1/infection_period
 
-print(f'Transmission Rate: {transmission_rate}')
-print(f'Recovery Rate: {recovery_rate:.4f}')
 
 initial_seed = 2500
 np.random.seed(initial_seed)
+
+print("*** INITIAL SETTINGS ***")
+print("Numerical SIR model:")
+print('Population Size: ', population_size)
+print('Total Days: ', total_days)
+print(f'Transmission Rate: {transmission_rate} days^-1')
+print(f'Recovery Rate: {recovery_rate:.4f} days^-1')
+print("Initial seed: ",initial_seed)
+print("*** END INITIAL SETTINGS ***\n")
 
 S = np.zeros(total_days) #Susceptible
 I = np.zeros(total_days) #Infected
